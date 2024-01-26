@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 const mongoURI = require("../config/dev")
 const userModel = require("./models/Users")
 
+const cors = require("cors");
+app.use(cors());
+app.use(express.json());
+
 mongoose.connect(mongoURI)
 // should i use mongoDB compass? 
 
@@ -18,8 +22,13 @@ app.get('getUsers', (req, res) => {
     })
 });
 
-app.post("/createUser", (req, res) => {
-    
+app.post("/createUser", async (req, res) => {
+    const user = req.body;
+    const newUser = new UserModel(user);
+    // wierd syntax but how mongo will save
+    await newUser.save();
+
+    res.json(user);
 })
 
 app.listen(3001, () => {
