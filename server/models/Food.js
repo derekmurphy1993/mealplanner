@@ -5,13 +5,11 @@ const foodSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    age: {
-        type: Number,
-        required: true
-    },
-    username: {
-        type: String,
-        required: true
+    nutrition: {
+        calories: Number,
+        carb: Number,
+        fat: Number,
+        protein: Number
     },
 });
 
