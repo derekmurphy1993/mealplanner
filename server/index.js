@@ -11,6 +11,8 @@ app.use(express.json());
 mongoose.connect(mongoURI)
 // should i use mongoDB compass? 
 
+require('./routes/foodRoutes')(app);
+
 app.get('getUsers', (req, res) => {
     userModel.find({}, (err, result) => {
         if (err) {

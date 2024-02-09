@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
-const foodModel = require("./models/Food")
+const FoodModel = require('../models/Food');
 
-app.get('getFoods', (req, res) => {
-    foodModel.find({}, (err, result) => {
+module.exports = app => {
+app.get('/getFoods', (req, res) => {
+    FoodModel.find({}, (err, result) => {
         if (err) {
             res.json(err)
         } else {
@@ -12,6 +13,26 @@ app.get('getFoods', (req, res) => {
     })
 });
 
+app.post("/createFood"), async (req, res) => {
+    const food = req.body
+    const newFood = new FoodModel(food);
+
+// try doing this so data to model changes are all local?
+//     const newFood = new FoodModel({
+//       title,
+//       content,
+//       _user: req.user.id
+//     });
+    
+    try {
+        await newFood.save();
+        res.send(newFood);
+  
+      } catch (err) {
+        res.send(400, err);
+      }
+}
+}
 
 // const mongoose = require('mongoose');
 // const requireLogin = require('../middlewares/requireLogin');
@@ -40,19 +61,7 @@ app.get('getFoods', (req, res) => {
 //   app.post('/api/blogs', requireLogin, cleanCache, async (req, res) => {
 //     const { title, content } = req.body;
 
-//     const blog = new Blog({
-//       title,
-//       content,
-//       _user: req.user.id
-//     });
 
-//     try {
-//       await blog.save();
-//       res.send(blog);
-
-//     } catch (err) {
-//       res.send(400, err);
-//     }
 
 //   });
 // };

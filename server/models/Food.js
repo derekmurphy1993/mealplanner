@@ -5,6 +5,14 @@ const foodSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    owner: {
+        type: String,
+        required: true,
+    },
+    date: {
+        type: Date,
+        required: true,
+    },
     nutrition: {
         calories: Number,
         carb: Number,
@@ -13,5 +21,5 @@ const foodSchema = new mongoose.Schema({
     },
 });
 
-const FoodModel = mongoose.model("recipes", foodSchema);
+const FoodModel = mongoose.model("foods", foodSchema);
 module.exports = FoodModel;
