@@ -11,7 +11,12 @@ export const TestBody = () => {
     const addNewMeal = food => {
         setListOfFoods([...listOfFoods, 
             {id: uuidv4(),
-            name: food, 
+            name: food.name,
+            url: food.url,
+            cals: food.cals,
+            carbs: food.carbs, 
+            prots: food.prots, 
+            fats: food.fats, 
             completed: false,
             isEditing: false}])
             console.log(listOfFoods)
