@@ -1,19 +1,32 @@
 const express = require("express");
 const app = express();
+const session = require('express-session');
 const mongoose = require('mongoose');
-const mongoURI = require("../config/dev")
+const mongoURI = require("./config/dev")
 const userModel = require("./models/Users")
+const passport = require('passport');
+require('./auth');
 
 const cors = require("cors");
 app.use(cors());
 app.use(express.json());
+app.use(session({ secret: 'enviovariablenotsource' }));
+// flesh out depreciation using express-session docs
+app.use(passport.initialize());
+app.use(passport.session());
 
-mongoose.connect(mongoURI)
+require('./routes/authRoutes')(app);
+
+mongoose.connect(mongoURI.mongoURI)
 // should i use mongoDB compass? 
+
+app.get('/', (req, res) => {
+    res.send(`<a href="/auth/google"> authenticate w google</a>`);
+});
 
 require('./routes/foodRoutes')(app);
 
-app.get('getUsers', (req, res) => {
+app.get('getUsers', (req, res) => { 
     userModel.find({}, (err, result) => {
         if (err) {
             res.json(err)
