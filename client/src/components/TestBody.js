@@ -28,7 +28,6 @@ export const TestBody = () => {
     //         setListOfFoods(res.data)
     //     })
     // }, [])
-
     // const onPressGet = () => {
     //     console.log('GET')
     // }
@@ -45,9 +44,9 @@ export const TestBody = () => {
     // }
 return (
     <div>
-    <div className="newFoodWrapper"> 
+    {/* <div className="newFoodWrapper"> 
         <FoodForm addNewMeal={addNewMeal} />
-    </div>
+    </div> */}
     {listOfFoods.map((item, index) => {
        return <FoodItem food={item} key={index}/>
     } )}
