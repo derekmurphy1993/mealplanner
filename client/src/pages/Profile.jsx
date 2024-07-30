@@ -1,4 +1,119 @@
+import { useSelector } from "react-redux";
+import { useEffect, useRef, useState } from "react";
+import { app } from "../firebase";
+import {
+	getDownloadURL,
+	getStorage,
+	ref,
+	uploadBytesResumable,
+} from "firebase/storage";
 
 export default function Profile() {
-	return <div>Profile</div>;
+	const { currentUser } = useSelector((state) => state.user);
+	const [file, setFile] = useState(undefined);
+	const [filePerc, setFilePerc] = useState(0);
+	const [fileUploadError, setFileUploadError] = useState(false);
+	const [formData, setFormData] = useState({});
+	const fileRef = useRef(null);
+	const loading = false;
+	const handleChange = () => {};
+	const handleDeleteUser = () => {};
+	const handleSignOut = () => {};
+
+	console.log(formData);
+	console.log(filePerc);
+	console.log(fileUploadError);
+
+	useEffect(() => {
+		if (file) {
+			handleFileUpload(file);
+		}
+	}, [file]);
+
+	const handleFileUpload = (file) => {
+		const storage = getStorage(app);
+		const fileName = new Date().getTime() + file.name;
+		const storageRef = ref(storage, fileName);
+		const uploadTask = uploadBytesResumable(storageRef, file);
+
+		uploadTask.on(
+			"state_changed",
+			(snapshot) => {
+				const progress =
+					(snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+				setFilePerc(Math.round(progress));
+			},
+			(error) => {
+				setFileUploadError(true);
+			},
+			() => {
+				getDownloadURL(uploadTask.snapshot.ref).then((downloadUrl) => {
+					setFormData({ ...formData, avatar: downloadUrl });
+				});
+			}
+		);
+	};
+
+	return (
+		<div className="p-3 max-w-large mx-auto">
+			<h1 className="font-semibold text-3xl text-center my-7">Profile</h1>
+			<form className="flex flex-col gap-4">
+				<input
+					type="file"
+					ref={fileRef}
+					hidden
+					accept="image/*"
+					onChange={(e) => setFile(e.target.files[0])}
+				/>
+				<img
+					onClick={() => fileRef.current.click()}
+					className="rounded-full h-24 w-24 object-cover border-red-200 cursor-pointer self-center mt-2"
+					src={currentUser.avatar}
+				/>
+
+				<input
+					type="text"
+					id="username"
+					placeholder="username"
+					defaultValue={currentUser.username}
+					className="border p-3 rounded-lg"
+					onChange={handleChange}
+				/>
+				<input
+					type="text"
+					id="email"
+					placeholder="email"
+					defaultValue={currentUser.email}
+					className="border p-3 rounded-lg"
+					onChange={handleChange}
+				/>
+				<input
+					type="password"
+					id="password"
+					placeholder="password"
+					className="border p-3 rounded-lg"
+				/>
+				<button
+					disabled={loading}
+					className="bg-slate-700 text-white rounded-lg 
+          p-3 uppercase hover:opacity-90 disabled:opacity-80"
+				>
+					{loading ? "loading..." : "Update"}
+				</button>
+			</form>
+			<div className="flex justify-between mt-5">
+				<span
+					onClick={handleDeleteUser}
+					className="text-red-700 cursor-pointer"
+				>
+					{" "}
+					Delete Account{" "}
+				</span>
+				<span onClick={handleSignOut} className="text-red-700 cursor-pointer">
+					{" "}
+					Sign Out{" "}
+				</span>
+			</div>
+		</div>
+	);
 }
