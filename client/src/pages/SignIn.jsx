@@ -21,8 +21,6 @@ export default function SignIn() {
 		});
 	};
 
-	console.log(formData);
-
 	const onSubmitHandler = async (e) => {
 		e.preventDefault();
 		try {
@@ -42,7 +40,7 @@ export default function SignIn() {
 			dispatch(signInSuccess(data));
 			navigate("/");
 		} catch (error) {
-			dispatch(signInFailure(data.message));
+			dispatch(signInFailure(error.message));
 		}
 	};
 

@@ -9,9 +9,9 @@ export const signup = async (req, res, next) => {
 	const newUser = new User({ username, email, password: hashedPass });
 	try {
 		await newUser.save();
-		res.status(201).json("User created successfully.");
-	} catch (error) {
-		next(error);
+		res.status(201).json("user created");
+	} catch (err) {
+		next(errorHandler(550, "error: from the function"));
 	}
 };
 
@@ -19,22 +19,19 @@ export const signin = async (req, res, next) => {
 	const { email, password } = req.body;
 	try {
 		const validUser = await User.findOne({ email });
-		if (!validUser) {
-			return next(errorHandler(404, "User not found."));
-		}
+		if (!validUser) return next(errorHandler(404, "User not found"));
 		const validPassword = bcryptjs.compareSync(password, validUser.password);
-		if (!validPassword) {
-			return next(errorHandler(401, "Wrong Credential"));
-		}
+		if (!validPassword) return next(errorHandler(401, "Wrong Credentials"));
 		const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET);
-		const { password: pass, ...rest } = validUser._doc;
+		// so we do not return the password or encrypted pw
+		const { password: pass, ...restInfo } = validUser._doc;
 		res
 			.cookie("access_token", token, {
 				httpOnly: true,
-				expires: new Date(Date.now() + 24 * 60 * 60 * 100),
+				expires: new Date(Date.now() + 24 * 60 * 60 * 32),
 			})
 			.status(200)
-			.json(rest);
+			.json(restInfo);
 	} catch (error) {
 		next(error);
 	}
@@ -70,6 +67,15 @@ export const google = async (req, res, next) => {
 			const { password: pass, ...rest } = user._doc;
 			res.cooke("access_token", token, { httpOnly: true });
 		}
+	} catch (error) {
+		next(error);
+	}
+};
+
+export const signout = async (req, res, next) => {
+	try {
+		res.clearCookie("access_token");
+		res.status(200).json("User has logged out");
 	} catch (error) {
 		next(error);
 	}
