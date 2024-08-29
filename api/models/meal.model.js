@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
 
+const recipeSchema = new mongoose.Schema({
+	url: { type: String },
+	steps: [{ type: String }],
+	ingredients: [
+		{
+			name: { type: String, required: true },
+			quantity: { type: Number, required: true },
+			unit: { type: String, required: true },
+		},
+	],
+});
+
 const mealSchema = new mongoose.Schema(
 	{
 		name: {
@@ -24,14 +36,13 @@ const mealSchema = new mongoose.Schema(
 			default:
 				"https://static.wikia.nocookie.net/avatar/images/a/ae/Aang_at_Jasmine_Dragon.png/revision/latest?cb=20130612174003",
 		},
-		ingredients: {
-			Name: { type: String },
-			Measurement: "300g",
+		recipe: {
+			type: recipeSchema,
 		},
 	},
 	{ timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
+const Meal = mongoose.model("Meal", mealSchema);
 
-export default User;
+export default Meal;
