@@ -30,6 +30,11 @@ export default function Header() {
 							My Planner
 						</li>
 					</Link>
+					<Link to={`/create-meal`}>
+						<li className="sm:inline text-slate-300 hover:underline">
+							Add Meal
+						</li>
+					</Link>
 					<Link to={`/profile`}>
 						{currentUser ? (
 							<img

@@ -4,6 +4,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Planner from "./pages/Planner";
 import Profile from "./pages/Profile";
+import CreateMeal from "./pages/CreateMeal";
 import Header from "./components/Header";
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -18,6 +19,7 @@ export default function App() {
 				<Route path="/my-planner" element={<Planner />} />
 				<Route element={<PrivateRoute />}>
 					<Route path="/profile" element={<Profile />} />
+					<Route path="/create-meal" element={<CreateMeal />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
