@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 
 export default function CreateMeal() {
-	const [ShowAddRecipe, setShowAddRecipe] = useState(true);
+	const [showAddRecipe, setShowAddRecipe] = useState(true);
+
+	const checkHandler = () => {
+		setShowAddRecipe(!showAddRecipe);
+	};
 	return (
 		<main className="p-3 max-w-4xl mx-auto">
 			<h1 className="text-3xl font-semibold text-center my-7">CreateMeal</h1>
@@ -41,10 +45,18 @@ export default function CreateMeal() {
 						className="border p-3 rounded-lg"
 						id="prots"
 					/>
-					<input type="checkbox" /> <p> Add Recipe Info </p>
+					<div className="flex">
+						<p className="mr-3"> Add Recipe Info </p>
+						<input
+							type="checkbox"
+							id="recipeCheckbox"
+							checked={showAddRecipe}
+							onChange={checkHandler}
+						/>{" "}
+					</div>
 				</div>
-				{ShowAddRecipe && (
-					<div className="">
+				{showAddRecipe && (
+					<div className="flex flex-col">
 						Recipe Url:
 						<input
 							type="text"
@@ -54,8 +66,11 @@ export default function CreateMeal() {
 							maxLength="320"
 							minLength="6"
 						/>
+						<div className="font-semibold text-green-700 hover:text-green-500">
+							Add Ingredient
+						</div>
 						Ingredient:
-						<div>
+						<div className="flex">
 							<input
 								type="text"
 								placeholder="Ingredient"
@@ -72,10 +87,13 @@ export default function CreateMeal() {
 							/>
 							<input
 								type="text"
-								placeholder="amount"
+								placeholder="unit"
 								className="border p-3 rounded-lg"
-								id="amount"
+								id="unit"
 							/>
+							<div className="font-semibold text-red-700 hover:text-red-500">
+								Remove Ingredient
+							</div>
 						</div>
 						Step:
 						<input
