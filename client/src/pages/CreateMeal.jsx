@@ -1,32 +1,151 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateMeal() {
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const [showAddRecipe, setShowAddRecipe] = useState(true);
-  const [stepItems, setStepItems] = useState([{ step: "" }]);
-  const [ingredients, setIngredients] = useState([{ step: "" }]);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    calories: 0,
+    fats: 0,
+    carbs: 0,
+    prots: 0,
+    image: "",
+    recipe: {
+      url: "",
+      steps: [""],
+      ingredients: [{ itemName: "", itemAmount: 0, itemUnit: "" }],
+    },
+  });
+
+  // const [recipe, setRecipie]
+  // do i need to set an ingredients []
   const checkHandler = () => {
     setShowAddRecipe(!showAddRecipe);
   };
 
   const handleAddStep = () => {
-    setStepItems([...stepItems, { step: "" }]);
+    setFormData({
+      ...formData,
+      recipe: {
+        ...formData.recipe,
+        steps: [...formData.recipe.steps, ""],
+      },
+    });
   };
 
   const handleRemoveStep = (index) => {
-    const list = [...stepItems];
+    const list = [...formData.recipe.steps];
     list.splice(index, 1);
-    setStepItems(list);
+    setFormData({
+      ...formData,
+      recipe: {
+        ...formData.recipe,
+        steps: list,
+      },
+    });
   };
 
-  const handleAddItem = () => {
-    setIngredients([...ingredients, { ingredient: "" }]);
+  const handleAddIngredient = () => {
+    setFormData({
+      ...formData,
+      recipe: {
+        ...formData.recipe,
+        ingredients: [
+          ...formData.recipe.ingredients,
+          { itemName: "", itemAmount: 0, itemUnit: "" },
+        ],
+      },
+    });
   };
 
-  const handleRemoveItem = (index) => {
-    const list = [...ingredients];
+  const handleRemoveIngredient = (index) => {
+    const list = [...formData.recipe.ingredients];
     list.splice(index, 1);
-    setIngredients(list);
+    setFormData({
+      ...formData,
+      recipe: {
+        ...formData.recipe,
+        ingredients: list,
+      },
+    });
+  };
+
+  const handleChange = (e) => {
+    if (e.target.id === "recipeUrl") {
+      setFormData({
+        ...formData,
+        recipe: {
+          ...formData.recipe,
+          url: e.target.value,
+        },
+      });
+      return;
+    } else {
+      setFormData({
+        ...formData,
+        [e.target.id]: e.target.value,
+      });
+    }
+  };
+
+  const handleIngredientChange = (e, index) => {
+    const ingredientList = [...formData.recipe.ingredients];
+    ingredientList[index][e.target.id] = e.target.value;
+
+    setFormData({
+      ...formData,
+      recipe: {
+        ...formData.recipe,
+        ingredients: ingredientList,
+      },
+    });
+    return;
+  };
+
+  const handleStepChange = (e, index) => {
+    const stepList = [...formData.recipe.steps];
+    stepList[index] = e.target.value;
+    setFormData({
+      ...formData,
+      recipe: {
+        ...formData.recipe,
+        steps: stepList,
+      },
+    });
+    return;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError(false);
+      const res = await fetch("api/meal/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          userRef: currentUser._id,
+        }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (data.success === false) {
+        setError(data.message);
+      }
+      navigate(`/meal/${data._id}`);
+    } catch (error) {
+      setError(error.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,7 +153,7 @@ export default function CreateMeal() {
       <h1 className="text-3xl font-semibold text-center my-7">
         Create New Meal
       </h1>
-      <form className="flex flex-row sm:flex-col">
+      <form onSubmit={handleSubmit} className="flex flex-row sm:flex-col">
         <div className="flex flex-col gap-4">
           <input
             type="text"
@@ -42,8 +161,10 @@ export default function CreateMeal() {
             className="border p-3 rounded-lg"
             id="name"
             maxLength="120"
-            minLength="6"
+            minLength="5"
             required
+            onChange={handleChange}
+            value={formData.name}
           />
           <input
             type="number"
@@ -51,24 +172,32 @@ export default function CreateMeal() {
             className="border p-3 rounded-lg"
             id="calories"
             required
+            onChange={handleChange}
+            value={formData.calories}
           />
           <input
             type="number"
             placeholder="Carbs p/ serving"
             className="border p-3 rounded-lg"
             id="carbs"
+            onChange={handleChange}
+            value={formData.carbs}
           />
           <input
             type="number"
             placeholder="Fats p/ serving"
             className="border p-3 rounded-lg"
             id="fats"
+            onChange={handleChange}
+            value={formData.fats}
           />
           <input
             type="number"
             placeholder="Protien p/ serving"
             className="border p-3 rounded-lg"
             id="prots"
+            onChange={handleChange}
+            value={formData.prots}
           />
           <div className="flex">
             <p className="mr-3"> Add Recipe Info </p>
@@ -86,41 +215,49 @@ export default function CreateMeal() {
               Recipe Url:
               <input
                 type="text"
-                placeholder="URL"
+                placeholder="URL to recipe"
                 className="border p-3 rounded-lg mb-4"
                 id="recipeUrl"
                 maxLength="320"
                 minLength="6"
+                value={formData.recipe.url}
+                onChange={handleChange}
               />
             </div>
             <div id="ingredients" className=" mb-4">
               Ingredients:
-              {ingredients.map((step, index) => (
+              {formData.recipe.ingredients.map((ingredient, index) => (
                 <div key={index} className="">
                   <div className="flex-row">
                     <input
                       type="text"
                       placeholder="Ingredient"
                       className="border p-3 rounded-lg w-1/2 m-1"
-                      id="name"
+                      id="itemName"
                       maxLength="120"
-                      minLength="6"
+                      minLength="3"
+                      value={formData.recipe.ingredients[index].itemName}
+                      onChange={(e) => handleIngredientChange(e, index)}
                     />
                     <input
                       type="number"
-                      placeholder="amount"
+                      placeholder="Amount"
                       className="border p-3 rounded-lg"
-                      id="amount"
+                      id="itemAmount"
+                      value={formData.recipe.ingredients[index].itemAmount}
+                      onChange={(e) => handleIngredientChange(e, index)}
                     />
                     <input
                       type="text"
                       placeholder="unit"
                       className="border p-3 rounded-lg"
-                      id="unit"
+                      id="itemUnit"
+                      value={formData.recipe.ingredients[index].itemUnit}
+                      onChange={(e) => handleIngredientChange(e, index)}
                     />
-                    {ingredients.length > 1 && (
+                    {formData.recipe.ingredients.length > 1 && (
                       <div
-                        onClick={() => handleRemoveItem(index)}
+                        onClick={() => handleRemoveIngredient(index)}
                         className="font-semibold text-red-700 w-2/12 hover:text-red-500 text-center"
                       >
                         Remove
@@ -128,23 +265,23 @@ export default function CreateMeal() {
                     )}
                   </div>
 
-                  {ingredients.length - 1 === index &&
-                    ingredients.length < 7 && (
+                  {formData.recipe.ingredients.length - 1 === index &&
+                    formData.recipe.ingredients.length < 30 && (
                       <div
-                        onClick={handleAddItem}
+                        onClick={handleAddIngredient}
                         className="font-semibold text-green-700 hover:text-green-500"
                       >
                         Add Item
                       </div>
                     )}
-                  {ingredients.length === 7 &&
-                    ingredients.length - 1 === index &&
-                    "Max number of steps reached, consider simplifying or linking to an external page"}
+                  {formData.recipe.ingredients.length === 30 &&
+                    formData.recipe.ingredients.length - 1 === index &&
+                    "Max number of ingredients reached, consider linking to an external page"}
                 </div>
               ))}
             </div>
             Instructions:
-            {stepItems.map((step, index) => (
+            {formData.recipe.steps.map((step, index) => (
               <div key={index} className="">
                 <p>Step {index + 1}</p>
                 <div className="flex flex-col">
@@ -152,14 +289,15 @@ export default function CreateMeal() {
                     type="text"
                     placeholder="Include the step for the recipe here in order"
                     className="border p-3 rounded-lg w-10/12"
-                    id="name"
+                    id="stepInput"
                     maxLength="520"
-                    minLength="6"
-                    required
+                    minLength="5"
+                    value={formData.recipe.steps[index].step}
+                    onChange={(e) => handleStepChange(e, index)}
                   />
-                  {stepItems.length > 1 && (
+                  {formData.recipe.steps.length > 1 && (
                     <div
-                      onClick={() => handleRemoveItem(index)}
+                      onClick={() => handleRemoveStep(index)}
                       className="font-semibold text-red-700 w-2/12 hover:text-red-500 text-center"
                     >
                       Remove
@@ -167,27 +305,30 @@ export default function CreateMeal() {
                   )}
                 </div>
 
-                {stepItems.length - 1 === index && stepItems.length < 7 && (
-                  <div
-                    onClick={handleAddStep}
-                    className="font-semibold text-green-700 hover:text-green-500"
-                  >
-                    Add Step
-                  </div>
-                )}
-                {stepItems.length === 7 &&
-                  stepItems.length - 1 === index &&
+                {formData.recipe.steps.length - 1 === index &&
+                  formData.recipe.steps.length < 7 && (
+                    <div
+                      onClick={handleAddStep}
+                      className="font-semibold text-green-700 hover:text-green-500"
+                    >
+                      Add Step
+                    </div>
+                  )}
+                {formData.recipe.steps.length === 7 &&
+                  formData.recipe.steps.length - 1 === index &&
                   "Max number of steps reached, consider simplifying or linking to an external page"}
               </div>
             ))}
           </div>
         )}
         <button
+          disabled={loading}
           type="submit"
-          className="rounded-lg text-slate-100 bg-green-600 hover:bg-green-400 p-3"
+          className="rounded-lg text-slate-100 bg-green-600 hover:bg-green-400 p-3 disabled:opacity-50"
         >
-          Save Meal
+          {loading ? "Saving Meal..." : "Save Meal"}
         </button>
+        {error && <p className="text-red-700 text-sm">{error}</p>}
       </form>
     </main>
   );
