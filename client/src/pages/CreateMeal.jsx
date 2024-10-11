@@ -23,8 +23,8 @@ export default function CreateMeal() {
     },
   });
 
-  // const [recipe, setRecipie]
-  // do i need to set an ingredients []
+  console.log(currentUser);
+
   const checkHandler = () => {
     setShowAddRecipe(!showAddRecipe);
   };
