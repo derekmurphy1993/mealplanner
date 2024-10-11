@@ -24,7 +24,7 @@ export default function RecipeBook() {
 
   useEffect(() => {
     handleGetMeals();
-  });
+  }, []);
 
   const handleMealDelete = async (mealId) => {
     try {

@@ -9,6 +9,7 @@ import Header from "./components/Header";
 import PrivateRoute from "./components/PrivateRoute";
 import Meal from "./pages/Meal";
 import RecipeBook from "./pages/RecipeBook";
+import UpdateMeal from "./pages/UpdateMeal";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-meal" element={<CreateMeal />} />
+          <Route path="/update-meal/:mealId" element={<UpdateMeal />} />
         </Route>
       </Routes>
     </BrowserRouter>

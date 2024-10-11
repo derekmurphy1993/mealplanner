@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 export default function Meal() {
   const [meal, getMeal] = useState(null);
@@ -18,7 +18,7 @@ export default function Meal() {
     };
 
     fetchMeal();
-  });
+  }, []);
 
   return (
     <div>
@@ -28,10 +28,12 @@ export default function Meal() {
             <h1 className="font-bold text-xl text-blue-950 text-center">
               {meal.name || "error"}
             </h1>
-            <button className="bg-green-400 rounded-lg p-3 font-semibold uppercase text-slate-100">
-              {" "}
-              Update{" "}
-            </button>
+            <Link to={`/update-meal/${meal._id}`}>
+              <button className="bg-green-400 rounded-lg p-3 font-semibold uppercase text-slate-100">
+                {" "}
+                Update{" "}
+              </button>
+            </Link>
           </div>
           <div className="flex-row">
             <div className="border w-4/12">IMAGE</div>

@@ -28,20 +28,22 @@ export const deleteMeal = async (req, res, next) => {
 };
 
 export const updateMeal = async (req, res, next) => {
-  const meal = Meal.findById(req.params.id);
+  const meal = await Meal.findById(req.params.id);
   if (!meal) {
     return next(errorHandler(404, "Item not found."));
   }
-  //   if (req.user.id !== meal.userRef.toString()) {
-  //     return next(errorHandler(401, "You cannot edit an item you do not own."));
-  //   }
+  if (req.user.id !== meal.userRef.toString()) {
+    return next(errorHandler(401, "You cannot edit an item you do not own."));
+  }
 
   try {
     const updateMeal = await Meal.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
     res.status(200).json(updateMeal);
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getMeal = async (req, res, next) => {
