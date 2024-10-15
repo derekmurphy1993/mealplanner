@@ -10,6 +10,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import Meal from "./pages/Meal";
 import RecipeBook from "./pages/RecipeBook";
 import UpdateMeal from "./pages/UpdateMeal";
+import Search from "./components/Search";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/my-planner" element={<Planner />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/recipe-book" element={<RecipeBook />} />
         <Route path="/meal/:mealId" element={<Meal />} />
         <Route element={<PrivateRoute />}>
