@@ -1,11 +1,74 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 export default function Search() {
+  const navigate = useNavigate();
+  const [searchData, setSearchData] = useState({
+    searchTerm: "",
+    sort: "latest",
+    order: "desc",
+  });
+  const [loading, setLoading] = useState(false);
+  const [meals, setMeals] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const searchTermFromUrl = urlParams.get("searchTerm");
+    const sortFromUrl = urlParams.get("sort");
+    const orderFromUrl = urlParams.get("order");
+    if (searchTermFromUrl || sortFromUrl || orderFromUrl) {
+      setSearchData({
+        searchTerm: searchTermFromUrl || "",
+        sort: sortFromUrl || "created_at",
+        order: orderFromUrl || "desc",
+      });
+    }
+    const fetchListings = async () => {
+      setLoading(true);
+      const searchQuery = urlParams.toString();
+      const res = await fetch(`/api/meal/search?${searchQuery}`);
+      const data = await res.json();
+      setMeals(data);
+      setLoading(false);
+    };
+
+    fetchListings();
+  }, []);
+
+  const handleChange = (e) => {
+    if (e.target.id === "searchTerm") {
+      setSearchData({ ...searchData, searchTerm: e.target.value });
+    }
+
+    if (e.target.id === "sort_order") {
+      const sort = e.target.value.split("_")[0] || "latest";
+      const order = e.target.value.split("_")[1] || "desc";
+
+      setSearchData({ ...searchData, sort, order });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const urlParams = new URLSearchParams();
+    console.log(urlParams);
+    urlParams.set("searchTerm", searchData.searchTerm);
+    urlParams.set("sort", searchData.sort);
+    urlParams.set("order", searchData.order);
+    const searchQuery = urlParams.toString();
+
+    navigate(`/search?${searchQuery}`);
+  };
+
   return (
     <div className="flex flex-col md:flex-row">
       <div className="p-7 border-b-2 md:border-r-2 md:min-h-screen">
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className="flex items-center gap-2">
             <label className="font-semibold whitespace-nowrap">Search: </label>
             <input
+              value={searchData.searchTerm}
+              onChange={handleChange}
               type="text"
               id="searchTerm"
               placeholder="Search..."
@@ -14,16 +77,21 @@ export default function Search() {
           </div>
           <div className="flex items-center gap-2">
             <label className="whitespace-nowrap font-semibold">Order: </label>
-            <select id="sort_order" className="border rounded-lg p-3">
-              <option>Latest</option>
-              <option>CALORIES: High to Low</option>
-              <option>CALORIES: Low to High</option>
-              <option>PROTIEN: High to Low</option>
-              <option>PROTIEN: Low to High</option>
-              <option>CARBS: High to Low</option>
-              <option>CARBS: Low to High</option>
-              <option>FAT: High to Low</option>
-              <option>FAT: Low to High</option>
+            <select
+              onChange={handleChange}
+              defaultValue={"created_at_desc"}
+              id="sort_order"
+              className="border rounded-lg p-3"
+            >
+              <option value="latest_desc">Latest</option>
+              <option value="calories_desc">CALORIES: High to Low</option>
+              <option value="calories_asc">CALORIES: Low to High</option>
+              <option value="protien_desc">PROTIEN: High to Low</option>
+              <option value="protien_asc">PROTIEN: Low to High</option>
+              <option value="carbs_desc">CARBS: High to Low</option>
+              <option value="carbs_asc">CARBS: Low to High</option>
+              <option value="fat_desc">FAT: High to Low</option>
+              <option value="fat_asc">FAT: Low to High</option>
             </select>
           </div>
           <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-90">
