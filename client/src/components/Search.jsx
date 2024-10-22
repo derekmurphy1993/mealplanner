@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import MealCard from "./MealCard";
 
 export default function Search() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function Search() {
   });
   const [loading, setLoading] = useState(false);
   const [meals, setMeals] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -28,12 +30,15 @@ export default function Search() {
       const searchQuery = urlParams.toString();
       const res = await fetch(`/api/meal/search?${searchQuery}`);
       const data = await res.json();
+      if (data.length > 8) {
+        setShowMore(true);
+      }
       setMeals(data);
       setLoading(false);
     };
 
     fetchListings();
-  }, []);
+  }, [location.search]);
 
   const handleChange = (e) => {
     if (e.target.id === "searchTerm") {
@@ -60,6 +65,20 @@ export default function Search() {
     navigate(`/search?${searchQuery}`);
   };
 
+  const onShowMoreClick = async () => {
+    const numberOfMeals = meals.length;
+    const startIndex = numberOfMeals;
+    const urlParams = new URLSearchParams(location.search);
+    urlParams.set("startIndex", startIndex);
+    const searchQuery = urlParams.toString();
+    const res = await fetch(`/api/meal/search?${searchQuery}`);
+    const data = await res.json();
+    if (data.length < 9) {
+      setShowMore(false);
+    }
+    setMeals([...meals, ...data]);
+  };
+
   return (
     <div className="flex flex-col md:flex-row">
       <div className="p-7 border-b-2 md:border-r-2 md:min-h-screen">
@@ -84,14 +103,15 @@ export default function Search() {
               className="border rounded-lg p-3"
             >
               <option value="latest_desc">Latest</option>
+              <option value="latest_asc">Oldest</option>
               <option value="calories_desc">CALORIES: High to Low</option>
               <option value="calories_asc">CALORIES: Low to High</option>
-              <option value="protien_desc">PROTIEN: High to Low</option>
-              <option value="protien_asc">PROTIEN: Low to High</option>
+              <option value="prots_desc">PROTIEN: High to Low</option>
+              <option value="prots_asc">PROTIEN: Low to High</option>
               <option value="carbs_desc">CARBS: High to Low</option>
               <option value="carbs_asc">CARBS: Low to High</option>
-              <option value="fat_desc">FAT: High to Low</option>
-              <option value="fat_asc">FAT: Low to High</option>
+              <option value="fats_desc">FAT: High to Low</option>
+              <option value="fats_asc">FAT: Low to High</option>
             </select>
           </div>
           <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-90">
@@ -103,6 +123,19 @@ export default function Search() {
         <h1 className="text-3xl font-semibold p-3 border-b mt-5 text-slate-800">
           Results:
         </h1>
+        {!loading &&
+          meals &&
+          meals.map((meal) => <MealCard key={meal._id} meal={meal} />)}
+        {loading && "Loading Results"}
+        {showMore && (
+          <button
+            onClick={onShowMoreClick}
+            className="text-green-700 hover:underline p-7 text-center w-full"
+          >
+            Show More Results
+          </button>
+        )}
+        {!loading && !meals && "No meals found"}
       </div>
     </div>
   );

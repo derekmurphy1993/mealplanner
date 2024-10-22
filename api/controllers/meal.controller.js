@@ -21,7 +21,7 @@ export const deleteMeal = async (req, res, next) => {
   }
   try {
     await Meal.findByIdAndDelete(req.params.id);
-    res.status(200).json(`Meal has been deleted`);
+    return res.status(200).json(`Meal has been deleted`);
   } catch (error) {
     next(error);
   }
