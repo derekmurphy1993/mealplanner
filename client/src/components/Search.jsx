@@ -80,8 +80,8 @@ export default function Search() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <div className="p-7 border-b-2 md:border-r-2 md:min-h-screen">
+    <div className="flex flex-col w-fit">
+      <div className="p-7 border-b-2 border-r-2">
         <form onSubmit={handleSubmit}>
           <div className="flex items-center gap-2">
             <label className="font-semibold whitespace-nowrap">Search: </label>
@@ -91,7 +91,7 @@ export default function Search() {
               type="text"
               id="searchTerm"
               placeholder="Search..."
-              className="border rounded-lg p-3 w-full"
+              className="border rounded-lg p-3 w-fit"
             ></input>
           </div>
           <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export default function Search() {
           </button>
         </form>
       </div>
-      <div className="">
+      <div className="border-r-2">
         <h1 className="text-3xl font-semibold p-3 border-b mt-5 text-slate-800">
           Results:
         </h1>
