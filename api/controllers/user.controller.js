@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import Meal from "../models/meal.model.js";
+import Planner from "../models/planner.model.js";
 import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
 
@@ -58,5 +59,18 @@ export const getUserMeals = async (req, res, next) => {
     }
   } else {
     return next(errorHandler(401, "You can only view your own meals!"));
+  }
+};
+
+export const getUserPlanners = async (req, res, next) => {
+  if (req.user.id === req.params.id) {
+    try {
+      const planners = await Planner.find({ userRef: req.params.id });
+      res.status(200).json(planners);
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    return next(errorHandler(401, "You can only view your own plan!"));
   }
 };

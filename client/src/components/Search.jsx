@@ -125,7 +125,9 @@ export default function Search() {
         </h1>
         {!loading &&
           meals &&
-          meals.map((meal) => <MealCard key={meal._id} meal={meal} />)}
+          meals.map((meal, index) => (
+            <MealCard key={meal._id} meal={meal} index={index} />
+          ))}
         {loading && "Loading Results"}
         {showMore && (
           <button
