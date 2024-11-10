@@ -28,6 +28,8 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-meal" element={<CreateMeal />} />
           <Route path="/update-meal/:mealId" element={<UpdateMeal />} />
+          <Route path="/create-planner" element={<CreateMeal />} />
+          <Route path="/create-planner" element={<CreateMeal />} />
         </Route>
       </Routes>
     </BrowserRouter>

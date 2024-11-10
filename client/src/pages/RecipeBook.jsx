@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import MealCard from "../components/MealCard";
 
 export default function RecipeBook() {
   const { currentUser } = useSelector((state) => state.user);
@@ -58,33 +59,14 @@ export default function RecipeBook() {
       {showMealError && <p className="text-red-600"> Error fetching data </p>}
 
       {userMeals && userMeals.length > 0 && (
-        <div className="flex flex-row flex-wrap gap-4">
-          {userMeals.map((meal) => (
-            <div
+        <div className="flex flex-row flex-wrap gap-3 justify-around">
+          {userMeals.map((meal, index) => (
+            <MealCard
               key={meal._id}
-              className="border border-cyan-800 border-spacing-2 flex flex-col w-4/12 rounded-lg p-3 justify-between gap-3 mt-2"
-            >
-              <div className="flex flex-row gap-5">
-                <Link to={`/meal/${meal._id}`}>
-                  <p className="text-blue-950 font-semibold">{meal.name}</p>
-                </Link>
-                <button
-                  onClick={() => handleMealDelete(meal._id)}
-                  className="text-red-700 text-right uppercase font-semibold"
-                >
-                  Dlt
-                </button>
-              </div>
-              <p className="text-blue-950 font-semibold">
-                Calories: {meal.calories}
-              </p>
-
-              <div className="flex flex-row">
-                <p className="text-blue-950 w-4/12">Protien: {meal.prots}g</p>
-                <p className="text-blue-950 w-4/12">Fats: {meal.fats}g</p>
-                <p className="text-blue-950 w-4/12">Carbs: {meal.carbs}g</p>
-              </div>
-            </div>
+              meal={meal}
+              index={index}
+              del={handleMealDelete}
+            />
           ))}
         </div>
       )}
