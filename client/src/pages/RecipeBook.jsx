@@ -27,21 +27,6 @@ export default function RecipeBook() {
     handleGetMeals();
   }, []);
 
-  const handleMealDelete = async (mealId) => {
-    try {
-      const res = await fetch(`/api/meal/delete/${mealId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (data.success === false) {
-        return;
-      }
-      setUserMeals((prev) => prev.filter((listing) => listing._id !== mealId));
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-
   return (
     <div className="flex flex-col">
       <h1 className="text-center mt-7 text-2xl">Your Meals</h1>
@@ -61,12 +46,7 @@ export default function RecipeBook() {
       {userMeals && userMeals.length > 0 && (
         <div className="flex flex-row flex-wrap gap-3 justify-around">
           {userMeals.map((meal, index) => (
-            <MealCard
-              key={meal._id}
-              meal={meal}
-              index={index}
-              del={handleMealDelete}
-            />
+            <MealCard key={meal._id} meal={meal} index={index} />
           ))}
         </div>
       )}

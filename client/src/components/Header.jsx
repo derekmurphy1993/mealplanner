@@ -24,10 +24,10 @@ export default function Header() {
   }, [location.search]);
 
   return (
-    <header className="bg-blue-800 shadow-md">
+    <header className="bg-leaf-200 shadow-md">
       <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
-        <h1 className="font-bold text-sm sm:text-xl flex flex-wrap">
-          FoodPlanner
+        <h1 className="font-bold text-chili text-sm sm:text-xl ml-3 flex flex-wrap">
+          MacroPlanner
         </h1>
         <form
           onSubmit={handleSubmit}
@@ -42,21 +42,15 @@ export default function Header() {
           />
           <FaSearch className="text-slate-500" />
         </form>
-        <ul className="flex gap-4">
+        <ul className="flex gap-4 text-slate-700">
           <Link to={`/`}>
-            <li className="hidden sm:inline text-slate-300 hover:underline">
-              Home
-            </li>
+            <li className="hidden sm:inline  hover:underline">Home</li>
           </Link>
           <Link to={`/my-planner`}>
-            <li className="hidden sm:inline text-slate-300 hover:underline">
-              My Planner
-            </li>
+            <li className="hidden sm:inline hover:underline">My Planner</li>
           </Link>
           <Link to={`/recipe-book`}>
-            <li className="hidden sm:inline text-slate-300 hover:underline">
-              Recipe Book
-            </li>
+            <li className="hidden sm:inline hover:underline">Recipe Book</li>
           </Link>
           <Link to={`/profile`}>
             {currentUser ? (
