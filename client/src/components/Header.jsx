@@ -24,12 +24,12 @@ export default function Header() {
   }, [location.search]);
 
   return (
-    <header className="bg-leaf-200 shadow-md">
+    <header className="shadow-md bg-slate-100">
       <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
         <h1 className="font-bold text-chili text-sm sm:text-xl ml-3 flex flex-wrap">
-          MacroPlanner
+          Macro <span className="text-leaf-700">Planner</span>
         </h1>
-        <form
+        {/* <form
           onSubmit={handleSubmit}
           className="bg-slate-100 p-3 rounded-lg flex items-center"
         >
@@ -41,8 +41,8 @@ export default function Header() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <FaSearch className="text-slate-500" />
-        </form>
-        <ul className="flex gap-4 text-slate-700">
+        </form> */}
+        <ul className="flex gap-4 text-azul-700">
           <Link to={`/`}>
             <li className="hidden sm:inline  hover:underline">Home</li>
           </Link>

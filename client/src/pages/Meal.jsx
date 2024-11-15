@@ -43,7 +43,7 @@ export default function Meal() {
     <div className="">
       {meal && (
         <div className="flex flex-col min-w-full m-h-full mt-5 justify-items-center items-center">
-          <div className="flex flex-row max-h-[275px] overflow-hidden  bg-frenchblue-100">
+          <div className="flex flex-row max-h-[275px] overflow-hidden">
             <div className="border w-4/12">
               {meal.image ? (
                 <img
@@ -55,25 +55,33 @@ export default function Meal() {
                 "PLACEHOLDER :) "
               )}
             </div>
-            <div className="border flex-1 flex-col w-8/12 bg-frenchblue-100">
+            <div className="flex-1 flex-col w-8/12">
               <div className="flex flex-row min-w-screen justify-center items-center mt-2">
-                <h1 className="font-bold text-xl text-blue-950">
-                  {meal.name || "error"}
+                <h1 className="font-bold text-2xl text-azul-600 w-full ml-5">
+                  {meal.name || "error finding meal"}
                 </h1>
-                <Link to={`/update-meal/${meal._id}`}>
-                  <button className="bg-leaf-500 rounded-lg	p-3 font-semibold uppercase text-slate-100">
-                    {" "}
-                    Update{" "}
-                  </button>
-                </Link>
-                <TiDelete
-                  className="text-2xl transition-transform ml-2 hover:scale-150 duration-200 text-red-600"
-                  onClick={handleMealDelete}
-                />
               </div>
+
+              <Link to={`/update-meal/${meal._id}`}>
+                <button className="bg-leaf-300 hover:bg-leaf-400 text-azul-600 rounded-lg	p-3 font-semibold uppercase">
+                  {" "}
+                  Update{" "}
+                </button>
+              </Link>
+              <TiDelete
+                className="text-2xl transition-transform ml-2 hover:scale-150 duration-200 text-red-600"
+                onClick={handleMealDelete}
+              />
+
               <div className="ml-5">
                 {meal.recipe.url && (
-                  <Link to={meal.recipe.url}> URL to Source Recipe</Link>
+                  <Link
+                    to={meal.recipe.url}
+                    className="text-azul-700 hover:underline"
+                  >
+                    {" "}
+                    URL to Source Recipe
+                  </Link>
                 )}
                 <p className=" font-semibold">Calories: {meal.calories}</p>
                 <p>Protien: {meal.prots}</p>
@@ -82,8 +90,8 @@ export default function Meal() {
               </div>
             </div>
           </div>
-          <div className="w-full flex flex-row bg-slate-200">
-            <div className="w-4/12 border-4 mr-1 pl-3">
+          <div className="w-full flex flex-row">
+            <div className="w-4/12 mr-1 pl-3">
               <p className="font-bold border-b-2 mt-2 border-b-frenchblue-200 ">
                 {" "}
                 Ingredients
@@ -91,7 +99,7 @@ export default function Meal() {
               {meal.recipe.ingredients.map((ing) => (
                 <div
                   key={ing.itemName}
-                  className="flex flex-row text-left border-b-2 border-y-frenchblue-100 mr-3"
+                  className="flex flex-row text-left border-b-2 border-y-frenchblue-200 mr-3"
                 >
                   <p className="w-4/12">
                     {ing.itemAmount > 0 && ing.itemAmount + " " + ing.itemUnit}

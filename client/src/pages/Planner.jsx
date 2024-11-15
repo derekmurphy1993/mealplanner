@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import Search from "../components/Search";
+// import { Link } from "react-router-dom";
+// import Search from "../components/Search";
 import DayColumn from "../components/DayColumn";
 
 export default function Planner() {
@@ -9,6 +9,7 @@ export default function Planner() {
   const [userPlanners, setUserPlanners] = useState([]);
   const [currentPlanner, setCurrentPlanner] = useState(null);
   const [userMeals, setUserMeals] = useState([]);
+  const [inDev, setInDev] = useState(true);
 
   const { currentUser } = useSelector((state) => state.user);
 
@@ -31,20 +32,20 @@ export default function Planner() {
     handleGetPlanner();
   }, []);
 
-  const handleGetMeals = async () => {
-    try {
-      setError(false);
-      const res = await fetch(`/api/user/meals/${currentUser._id}`);
-      const data = await res.json();
-      if (data.success === false) {
-        setError(true);
-        return;
-      }
-      setUserMeals(data);
-    } catch (error) {
-      setError(true);
-    }
-  };
+  // const handleGetMeals = async () => {
+  //   try {
+  //     setError(false);
+  //     const res = await fetch(`/api/user/meals/${currentUser._id}`);
+  //     const data = await res.json();
+  //     if (data.success === false) {
+  //       setError(true);
+  //       return;
+  //     }
+  //     setUserMeals(data);
+  //   } catch (error) {
+  //     setError(true);
+  //   }
+  // };
 
   console.log("current planner, ", currentPlanner);
 
@@ -84,7 +85,9 @@ export default function Planner() {
 
   return (
     <div>
-      {!userPlanners ? (
+      {inDev ? (
+        <div> Coming Soon! </div>
+      ) : !userPlanners ? (
         <p onClick={handleCreatePlanner}>Create 5 Day Planner</p>
       ) : (
         <div className="flex flex-row">
