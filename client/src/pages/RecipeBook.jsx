@@ -5,7 +5,7 @@ import MealCard from "../components/MealCard";
 
 export default function RecipeBook() {
   const { currentUser } = useSelector((state) => state.user);
-  const [showMealError, setShowMealError] = useState(false);
+  const [showMealError, setShowMealError] = useState("");
   const [userMeals, setUserMeals] = useState([]);
 
   const handleGetMeals = async () => {
@@ -19,7 +19,7 @@ export default function RecipeBook() {
       }
       setUserMeals(data);
     } catch (error) {
-      setShowMealError(true);
+      setShowMealError(error.message);
     }
   };
 
@@ -35,13 +35,16 @@ export default function RecipeBook() {
           Create New Meal
         </p>
       </Link>
+
       {userMeals.length < 1 && (
-        <p className="text-red-600">
+        <p className="text-red-600 mt-4 text-center font-semibold">
           {" "}
           No meals found, add some in your recipe book
         </p>
       )}
-      {showMealError && <p className="text-red-600"> Error fetching data </p>}
+      {showMealError && (
+        <p className="text-red-600 mt-4 text-center"> {showMealError} </p>
+      )}
 
       {userMeals && userMeals.length > 0 && (
         <div className="flex flex-row flex-wrap gap-3 justify-around">

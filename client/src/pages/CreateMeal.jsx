@@ -158,7 +158,7 @@ export default function CreateMeal() {
           <input
             type="text"
             placeholder="Meal Name*"
-            className="border p-3 rounded-lg"
+            className="border font-bold p-3 rounded-lg"
             id="name"
             maxLength="120"
             minLength="5"
@@ -166,34 +166,55 @@ export default function CreateMeal() {
             onChange={handleChange}
             value={formData.name}
           />
+          <p className="">
+            Calories{" "}
+            <span className="text-sm font-light text-gray-500 italic">
+              per serving
+            </span>
+          </p>
           <input
             type="number"
-            placeholder="Calories p/ serving*"
             className="border p-3 rounded-lg"
             id="calories"
             required
             onChange={handleChange}
             value={formData.calories}
           />
+          <p className="">
+            Carbohydrates{" "}
+            <span className="text-sm font-light text-gray-500 italic">
+              grams per serving
+            </span>
+          </p>
           <input
             type="number"
             placeholder="Carbs p/ serving"
-            className="border p-3 rounded-lg"
+            className="border p-3 mt-1 rounded-lg"
             id="carbs"
             onChange={handleChange}
             value={formData.carbs}
           />
+          <p className="">
+            Fats{" "}
+            <span className="text-sm font-light text-gray-500 italic">
+              grams per serving
+            </span>
+          </p>
           <input
             type="number"
-            placeholder="Fats p/ serving"
             className="border p-3 rounded-lg"
             id="fats"
             onChange={handleChange}
             value={formData.fats}
           />
+          <p className="">
+            Protien{" "}
+            <span className="text-sm font-light text-gray-500 italic">
+              grams per serving
+            </span>
+          </p>
           <input
             type="number"
-            placeholder="Protien p/ serving"
             className="border p-3 rounded-lg"
             id="prots"
             onChange={handleChange}

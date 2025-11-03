@@ -9,7 +9,7 @@ export default function Planner() {
   const [userPlanners, setUserPlanners] = useState([]);
   const [currentPlanner, setCurrentPlanner] = useState(null);
   const [userMeals, setUserMeals] = useState([]);
-  const [inDev, setInDev] = useState(true);
+  const [inDev, setInDev] = useState(false);
 
   const { currentUser } = useSelector((state) => state.user);
 

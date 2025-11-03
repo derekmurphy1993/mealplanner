@@ -26,19 +26,19 @@ export default function Meal() {
     alert("hello!");
   };
 
-  // const handleConfirmedMealDelete = async (mealId) => {
-  //   try {
-  //     const res = await fetch(`/api/meal/delete/${mealId}`, {
-  //       method: "DELETE",
-  //     });
-  //     const data = await res.json();
-  //     if (data.success === false) {
-  //       return;
-  //     }
-  //   } catch (error) {
-  //     console.log(error.message);
-  //   }
-  // };
+  const handleConfirmedMealDelete = async (mealId) => {
+    try {
+      const res = await fetch(`/api/meal/delete/${mealId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        return;
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   return (
     <div className="">
