@@ -67,64 +67,86 @@ export default function Meal() {
                 </h1>
               </div>
 
-              <Link to={`/update-meal/${meal._id}`}>
-                <button className="bg-leaf-300 hover:bg-leaf-400 text-azul-600 text-xs rounded-lg	p-2 hover:scale-110 font-semibold uppercase">
-                  {" "}
-                  Update{" "}
-                </button>
-              </Link>
-              <TiDelete
-                className="text-2xl transition-transform ml-2 hover:scale-150 duration-200 text-red-600"
-                onClick={handleMealDelete}
-              />
+              <div className="flex flex-row">
+                <Link to={`/update-meal/${meal._id}`}>
+                  <button className="bg-leaf-300 hover:bg-leaf-400 text-azul-600 text-xs rounded-lg	p-2 hover:scale-110 font-semibold uppercase ml-5 mt-2">
+                    {" "}
+                    Update{" "}
+                  </button>
+                </Link>
+                <TiDelete
+                  className="inline-block align-middle text-2xl transition-transform ml-2 hover:scale-150 duration-200 text-red-600"
+                  onClick={handleMealDelete}
+                />
+              </div>
 
-              <div className="ml-5">
-                <p className=" font-semibold">Calories: {meal.calories}</p>
-                <p>Protien: {meal.prots}</p>
-                <p>Fats: {meal.fats}</p>
-                <p>Carbs: {meal.carbs}</p>
+              <div className="max-w-52  ml-5 mt-4">
+                <p className="font-semibold mb-2">Calories: {meal.calories}</p>
+                <div className="flex justify-between mx-2 flex-wrap">
+                  <div className="mt-0 text-sm flex flex-col justify-center items-center">
+                    <p className="border-b-2 border-b-slate-300">Protein</p>
+                    <p className="font-semibold">{meal.prots}g</p>
+                  </div>
+                  <div className="mt-0 text-sm flex flex-col justify-center items-center">
+                    <p className="border-b-2 border-b-slate-300">Fats</p>
+                    <p className="font-semibold">{meal.fats}g</p>
+                  </div>
+                  <div className="mt-0 text-sm flex flex-col justify-center items-center">
+                    <p className="border-b-2 border-b-slate-300">Carbs</p>
+                    <p className="font-semibold">{meal.carbs}g</p>
+                  </div>{" "}
+                </div>
               </div>
             </div>
           </div>
           <div className="w-full flex flex-row">
-            <div className="w-4/12 mr-1 pl-3">
+            <div className="w-4/12 mr-1 px-3">
               {meal.recipe.url && (
                 <Link
                   to={meal.recipe.url}
                   className="text-azul-700 mt-2 hover:underline"
                 >
                   {" "}
-                  {meal.recipe.url}
+                  Link to {meal.name} at Web
+                  {/* Create stripped domain from Url */}
                 </Link>
               )}
-              <p className="font-bold mt-2 "> Ingredients</p>
-              {meal.recipe.ingredients.map((ing) => (
-                <div
-                  key={ing.itemName}
-                  className="flex flex-row text-left max-w-md border-b-2 border-y-frenchblue-200 mr-3"
-                >
-                  <p className="w-4/12">
-                    {ing.itemAmount > 0 && ing.itemAmount + " " + ing.itemUnit}
-                  </p>
-                  <p className="text-wrap ml-1 w-8/12"> {ing.itemName} </p>
+              {meal.recipe.ingredients.length > 0 && (
+                <div>
+                  <p className="font-bold mt-2 "> Ingredients</p>
+
+                  {meal.recipe.ingredients.map((ing) => (
+                    <div
+                      key={ing.itemName}
+                      className="flex flex-row text-left max-w-md border-b-2 border-y-frenchblue-200 mr-3"
+                    >
+                      <p className="w-4/12">
+                        {ing.itemAmount > 0 &&
+                          ing.itemAmount + " " + ing.itemUnit}
+                      </p>
+                      <p className="text-wrap ml-1 w-8/12"> {ing.itemName} </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-            <div className="w-8/12 ml-5 max-w-2xl  border-frenchblue-100 bg-slate-100 border-2 rounded-md p-5 drop-shadow-md text-azul-700">
-              <p className="font-bold mt-3"> Directions</p>
-              {meal.recipe.steps.map((step, index) => (
-                <div key={step} className="relative mr-5 px-5 py-2 ">
-                  <div
-                    className="flex absolute -left-1
+            {meal.recipe.steps.length > 0 && (
+              <div className="w-8/12 ml-5 max-w-2xl  border-frenchblue-100 bg-slate-100 border-2 rounded-md p-5 drop-shadow-md text-azul-700">
+                <p className="font-bold mt-3"> Directions</p>
+                {meal.recipe.steps.map((step, index) => (
+                  <div key={step} className="relative mr-5 px-5 py-2 ">
+                    <div
+                      className="flex absolute -left-1
                     items-center justify-center
                     font-bold drop-shadow-lg text-azul-700 rounded-full"
-                  >
-                    <p className="text-base">{index + 1}</p>
+                    >
+                      <p className="text-base">{index + 1}</p>
+                    </div>
+                    {step}
                   </div>
-                  {step}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
