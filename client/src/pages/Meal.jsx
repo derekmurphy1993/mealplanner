@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { TiDelete } from "react-icons/ti";
 import placeholderimg from "../../assets/placeholder.png";
 
 export default function Meal() {
   const [meal, getMeal] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const params = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMeal = async () => {
@@ -22,21 +26,25 @@ export default function Meal() {
     fetchMeal();
   }, []);
 
-  const handleMealDelete = () => {
-    alert("hello!");
-  };
-
-  const handleConfirmedMealDelete = async (mealId) => {
+  const handleConfirmedMealDelete = async () => {
+    if (!meal?._id) return;
     try {
-      const res = await fetch(`/api/meal/delete/${mealId}`, {
+      setDeleting(true);
+      setDeleteError("");
+      const res = await fetch(`/api/meal/delete/${meal._id}`, {
         method: "DELETE",
       });
       const data = await res.json();
-      if (data.success === false) {
+      if (!res.ok || data.success === false) {
+        setDeleteError(data.message || "Problem deleting meal.");
+        setDeleting(false);
         return;
       }
+      setShowDeleteModal(false);
+      navigate("/recipe-book");
     } catch (error) {
-      console.log(error.message);
+      setDeleteError(error.message || "Problem deleting meal.");
+      setDeleting(false);
     }
   };
 
@@ -76,7 +84,7 @@ export default function Meal() {
                 </Link>
                 <TiDelete
                   className="inline-block align-middle text-2xl transition-transform ml-2 hover:scale-150 duration-200 text-red-600"
-                  onClick={handleMealDelete}
+                  onClick={() => setShowDeleteModal(true)}
                 />
               </div>
 
@@ -102,14 +110,16 @@ export default function Meal() {
           <div className="w-full flex flex-row">
             <div className="w-4/12 mr-1 px-3">
               {meal.recipe.url && (
-                <Link
-                  to={meal.recipe.url}
+                <a
+                  href={meal.recipe.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-azul-700 mt-2 hover:underline"
                 >
                   {" "}
                   Link to {meal.name} at Web
                   {/* Create stripped domain from Url */}
-                </Link>
+                </a>
               )}
               {meal.recipe.ingredients.length > 0 && (
                 <div>
@@ -147,6 +157,42 @@ export default function Meal() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete this meal?
+            </h2>
+            <p className="text-sm text-red-600 mb-4">
+              This action cannot be undone.
+            </p>
+            {deleteError && (
+              <p className="text-red-600 text-sm mb-3">{deleteError}</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className="px-3 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  if (deleting) return;
+                  setDeleteError("");
+                  setShowDeleteModal(false);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                onClick={handleConfirmedMealDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

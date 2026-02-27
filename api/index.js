@@ -8,19 +8,11 @@ import plannerRouter from "./routes/planner.route.js";
 import cookieParser from "cookie-parser";
 dotenv.config();
 
-mongoose
-  .connect(process.env.MONGO)
-  .then(console.log("connected to DB"))
-  .catch("error connecting to db");
 const app = express();
 
 app.use(express.json());
 
 app.use(cookieParser());
-
-app.listen(3000, () => {
-  console.log(`Server Running on port 3000`);
-});
 
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);
@@ -36,3 +28,20 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+const PORT = process.env.PORT || 3000;
+
+async function startServer() {
+  try {
+    await mongoose.connect(process.env.MONGO);
+    console.log("connected to DB");
+    app.listen(PORT, () => {
+      console.log(`Server Running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("error connecting to db", err);
+    process.exit(1);
+  }
+}
+
+startServer();

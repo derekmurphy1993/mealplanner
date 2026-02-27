@@ -126,7 +126,7 @@ export default function CreateMeal() {
     try {
       setLoading(true);
       setError(false);
-      const res = await fetch("api/meal/create", {
+      const res = await fetch("/api/meal/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -313,7 +313,7 @@ export default function CreateMeal() {
                     id="stepInput"
                     maxLength="520"
                     minLength="5"
-                    value={formData.recipe.steps[index].step}
+                    value={formData.recipe.steps[index]}
                     onChange={(e) => handleStepChange(e, index)}
                   />
                   {formData.recipe.steps.length > 1 && (

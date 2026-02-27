@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { app } from "../firebase";
 import {
   getDownloadURL,
@@ -77,7 +77,7 @@ export default function Profile() {
   const handleSignOut = async () => {
     try {
       dispatch(signOutUserStart());
-      const res = await fetch("api/auth/signout");
+      const res = await fetch("/api/auth/signout");
       const data = await res.json();
       if (data.success === false) {
         dispatch(signOutUserFailure(data.message));
@@ -85,17 +85,11 @@ export default function Profile() {
       }
       dispatch(signOutUserSuccess());
     } catch (error) {
-      dispatch(signOutUserFailure(data.message));
+      dispatch(signOutUserFailure(error.message));
     }
   };
 
-  useEffect(() => {
-    if (file) {
-      handleFileUpload(file);
-    }
-  }, [file]);
-
-  const handleFileUpload = (file) => {
+  const handleFileUpload = useCallback((file) => {
     const storage = getStorage(app);
     const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
@@ -110,14 +104,42 @@ export default function Profile() {
       },
       (error) => {
         setFileUploadError(true);
+        console.log(error);
       },
       () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadUrl) => {
-          setFormData({ ...formData, avatar: downloadUrl });
+        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadUrl) => {
+          try {
+            dispatch(updateUserStart());
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ avatar: downloadUrl }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.success === false) {
+              setFileUploadError(true);
+              dispatch(updateUserFailure(data.message || "Problem saving avatar."));
+              return;
+            }
+            dispatch(updateUserSuccess(data));
+            setFormData((prev) => ({ ...prev, avatar: downloadUrl }));
+            setUpdateSuccess(true);
+          } catch (error) {
+            setFileUploadError(true);
+            dispatch(updateUserFailure(error.message));
+          }
         });
-      }
+      },
     );
-  };
+  }, [currentUser._id, dispatch]);
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload(file);
+    }
+  }, [file, handleFileUpload]);
 
   return (
     <div className="p-3 max-w-large mx-auto">
@@ -135,6 +157,23 @@ export default function Profile() {
           className="rounded-full h-24 w-24 object-cover border-red-200 cursor-pointer self-center mt-2"
           src={currentUser.avatar}
         />
+        {fileUploadError ? (
+          <p className="text-red-700 text-sm text-center">
+            Problem uploading image.
+          </p>
+        ) : (
+          filePerc > 0 &&
+          filePerc < 100 && (
+            <p className="text-slate-700 text-sm text-center">
+              Uploading image: {filePerc}%
+            </p>
+          )
+        )}
+        {filePerc === 100 && !fileUploadError && (
+          <p className="text-green-700 text-sm text-center">
+            Image uploaded successfully.
+          </p>
+        )}
 
         <input
           type="text"
@@ -157,6 +196,7 @@ export default function Profile() {
           id="password"
           placeholder="password"
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
         <button
           disabled={loading}

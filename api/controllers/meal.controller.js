@@ -3,7 +3,10 @@ import { errorHandler } from "../utils/error.js";
 
 export const createMeal = async (req, res, next) => {
   try {
-    const meal = await Meal.create(req.body);
+    const meal = await Meal.create({
+      ...req.body,
+      userRef: req.user.id,
+    });
     return res.status(201).json(meal);
   } catch (error) {
     next(error);

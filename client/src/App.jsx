@@ -20,16 +20,14 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/my-planner" element={<Planner />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/recipe-book" element={<RecipeBook />} />
         <Route path="/meal/:mealId" element={<Meal />} />
         <Route element={<PrivateRoute />}>
+          <Route path="/my-planner" element={<Planner />} />
+          <Route path="/recipe-book" element={<RecipeBook />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-meal" element={<CreateMeal />} />
           <Route path="/update-meal/:mealId" element={<UpdateMeal />} />
-          <Route path="/create-planner" element={<CreateMeal />} />
-          <Route path="/create-planner" element={<CreateMeal />} />
         </Route>
       </Routes>
     </BrowserRouter>

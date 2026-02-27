@@ -4,7 +4,10 @@ import { errorHandler } from "../utils/error.js";
 
 export const createPlanner = async (req, res, next) => {
   try {
-    const planner = await Planner.create(req.body);
+    const planner = await Planner.create({
+      ...req.body,
+      userRef: req.user.id,
+    });
     return res.status(201).json(planner);
   } catch (error) {
     next(error);

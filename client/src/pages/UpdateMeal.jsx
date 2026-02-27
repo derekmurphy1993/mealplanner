@@ -306,7 +306,7 @@ export default function UpdateMeal() {
                     id="stepInput"
                     maxLength="520"
                     minLength="5"
-                    value={formData.recipe.steps[index].step}
+                    value={formData.recipe.steps[index]}
                     onChange={(e) => handleStepChange(e, index)}
                   />
                   {formData.recipe.steps.length > 1 && (

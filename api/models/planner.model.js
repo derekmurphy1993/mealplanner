@@ -15,7 +15,12 @@ const DayColumnSchema = new mongoose.Schema({
     ],
     required: true,
   },
-  meals: [],
+  meals: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Meal",
+    },
+  ],
 });
 
 const PlannerSchema = new mongoose.Schema(
