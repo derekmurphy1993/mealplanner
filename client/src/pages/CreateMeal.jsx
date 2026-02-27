@@ -11,10 +11,10 @@ export default function CreateMeal() {
 
   const [formData, setFormData] = useState({
     name: "",
-    calories: 0,
-    fats: 0,
-    carbs: 0,
-    prots: 0,
+    calories: null,
+    fats: null,
+    carbs: null,
+    prots: null,
     image: "",
     recipe: {
       url: "",
@@ -174,9 +174,9 @@ export default function CreateMeal() {
           </p>
           <input
             type="number"
+            placeholder="Calories p/ serving"
             className="border p-3 rounded-lg"
             id="calories"
-            required
             onChange={handleChange}
             value={formData.calories}
           />
@@ -188,7 +188,7 @@ export default function CreateMeal() {
           </p>
           <input
             type="number"
-            placeholder="Carbs p/ serving"
+            placeholder="Carbs p/ serving (grams)"
             className="border p-3 mt-1 rounded-lg"
             id="carbs"
             onChange={handleChange}
@@ -203,6 +203,7 @@ export default function CreateMeal() {
           <input
             type="number"
             className="border p-3 rounded-lg"
+            placeholder="Fats p/ serving (grams)"
             id="fats"
             onChange={handleChange}
             value={formData.fats}
@@ -216,6 +217,7 @@ export default function CreateMeal() {
           <input
             type="number"
             className="border p-3 rounded-lg"
+            placeholder="Protien p/ serving (grams)"
             id="prots"
             onChange={handleChange}
             value={formData.prots}

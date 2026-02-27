@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { TiDelete } from "react-icons/ti";
+import { TiDelete, TiWarningOutline } from "react-icons/ti";
 import placeholderimg from "../../assets/placeholder.png";
 
 export default function Meal() {
@@ -69,10 +69,20 @@ export default function Meal() {
               )}
             </div>
             <div className="flex-1 flex-col w-8/12 ml-5">
-              <div className="flex flex-row min-w-screen justify-center items-center mt-2">
-                <h1 className="font-bold text-2xl text-azul-600 w-full ml-5">
-                  {meal.name || "error finding meal"}
-                </h1>
+              <div className="mt-2 ml-5">
+                <div className="inline-flex items-center gap-2">
+                  <h1 className="font-bold text-2xl text-azul-600">
+                    {meal.name || "error finding meal"}
+                  </h1>
+                  {meal.completedMacros === false && (
+                    <div className="relative group/warn shrink-0">
+                      <TiWarningOutline className="text-amber-600 text-2xl" />
+                      <span className="pointer-events-none absolute right-0 top-7 z-20 w-56 rounded bg-slate-800 px-2 py-1 text-xs font-normal text-white opacity-0 transition-opacity group-hover/warn:opacity-100">
+                        nutritional information needed, please update
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-row">

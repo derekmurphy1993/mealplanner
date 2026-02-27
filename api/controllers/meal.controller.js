@@ -1,11 +1,23 @@
 import Meal from "../models/meal.model.js";
 import { errorHandler } from "../utils/error.js";
 
+const isValidMacroNumber = (value) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string" && value.trim() === "") return false;
+  return Number.isFinite(Number(value));
+};
+
+const computeCompletedMacros = (source) =>
+  ["calories", "carbs", "fats", "prots"].every((key) =>
+    isValidMacroNumber(source?.[key])
+  );
+
 export const createMeal = async (req, res, next) => {
   try {
     const meal = await Meal.create({
       ...req.body,
       userRef: req.user.id,
+      completedMacros: computeCompletedMacros(req.body),
     });
     return res.status(201).json(meal);
   } catch (error) {
@@ -40,9 +52,20 @@ export const updateMeal = async (req, res, next) => {
   }
 
   try {
-    const updateMeal = await Meal.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const nextMacroState = {
+      calories: req.body.calories ?? meal.calories,
+      carbs: req.body.carbs ?? meal.carbs,
+      fats: req.body.fats ?? meal.fats,
+      prots: req.body.prots ?? meal.prots,
+    };
+    const completedMacros = computeCompletedMacros(nextMacroState);
+    const updateMeal = await Meal.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, completedMacros },
+      {
+        new: true,
+      }
+    );
     res.status(200).json(updateMeal);
   } catch (error) {
     next(error);

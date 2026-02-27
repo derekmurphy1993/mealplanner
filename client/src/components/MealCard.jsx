@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 // import { FaHeart, FaRegHeart, FaReceipt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { TiWarningOutline } from "react-icons/ti";
 import placeholderimg from "../../assets/placeholder.png";
 
 export default function MealCard({ meal }) {
@@ -27,9 +28,17 @@ export default function MealCard({ meal }) {
           )}
         </div>
         <div className="p-2 text-azul-800">
-          <p className="font-semibold mx-2 text-lg xl:text-2xl xl:ml-10 border-t-2 border-frenchblue-200 border-opacity-45">
-            {meal.name}
-          </p>
+          <div className="font-semibold mx-2 text-lg xl:text-2xl xl:ml-10 border-t-2 border-frenchblue-200 border-opacity-45 flex items-start justify-between gap-2">
+            <p className="pr-1">{meal.name}</p>
+            {meal.completedMacros === false && (
+              <div className="relative group/warn shrink-0 mt-0.5">
+                <TiWarningOutline className="text-amber-600 text-xl" />
+                <span className="pointer-events-none absolute right-0 top-6 z-20 w-44 rounded bg-slate-800 px-2 py-1 text-xs font-normal text-white opacity-0 transition-opacity group-hover/warn:opacity-100">
+                  nutritional information needed, please update
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         <div className="max-w-96 mx-auto ">
           <p className="font-semibold p-1 mx-6">Calories: {meal.calories}</p>
