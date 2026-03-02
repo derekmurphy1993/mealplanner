@@ -98,7 +98,7 @@ export default function Meal() {
                 />
               </div>
 
-              <div className="max-w-52  ml-5 mt-4">
+              <div className="max-w-52 ml-5 mt-4">
                 <p className="font-semibold mb-2">Calories: {meal.calories}</p>
                 <div className="flex justify-between mx-2 flex-wrap">
                   <div className="mt-0 text-sm flex flex-col justify-center items-center">
@@ -151,7 +151,7 @@ export default function Meal() {
               )}
             </div>
             {meal.recipe.steps.length > 0 && (
-              <div className="w-8/12 ml-5 max-w-2xl  border-frenchblue-100 bg-slate-100 border-2 rounded-md p-5 drop-shadow-md text-azul-700">
+              <div className="w-8/12 ml-5 mb-5 max-w-2xl  border-frenchblue-100 bg-slate-100 border-2 rounded-md p-5 drop-shadow-md text-azul-700">
                 <p className="font-bold mt-3"> Directions</p>
                 {meal.recipe.steps.map((step, index) => (
                   <div key={step} className="relative mr-5 px-5 py-2 ">
