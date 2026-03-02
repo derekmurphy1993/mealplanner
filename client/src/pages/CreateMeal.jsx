@@ -18,8 +18,8 @@ export default function CreateMeal() {
     image: "",
     recipe: {
       url: "",
-      steps: [""],
-      ingredients: [{ itemName: "", itemAmount: 0, itemUnit: "" }],
+      steps: [],
+      ingredients: [],
     },
   });
 
@@ -249,6 +249,14 @@ export default function CreateMeal() {
             </div>
             <div id="ingredients" className=" mb-4">
               Ingredients:
+              {formData.recipe.ingredients.length === 0 && (
+                <div
+                  onClick={handleAddIngredient}
+                  className="font-semibold text-green-700 hover:text-green-500"
+                >
+                  Add Item
+                </div>
+              )}
               {formData.recipe.ingredients.map((ingredient, index) => (
                 <div key={index} className="">
                   <div className="flex-row">
@@ -304,6 +312,14 @@ export default function CreateMeal() {
               ))}
             </div>
             Instructions:
+            {formData.recipe.steps.length === 0 && (
+              <div
+                onClick={handleAddStep}
+                className="font-semibold text-green-700 hover:text-green-500"
+              >
+                Add Step
+              </div>
+            )}
             {formData.recipe.steps.map((step, index) => (
               <div key={index} className="">
                 <p>Step {index + 1}</p>

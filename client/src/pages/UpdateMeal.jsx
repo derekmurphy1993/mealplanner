@@ -260,6 +260,14 @@ export default function UpdateMeal() {
             </div>
             <div id="ingredients" className=" mb-4">
               Ingredients:
+              {formData.recipe.ingredients.length === 0 && (
+                <div
+                  onClick={handleAddIngredient}
+                  className="font-semibold text-green-700 hover:text-green-500"
+                >
+                  Add Item
+                </div>
+              )}
               {formData.recipe.ingredients.map((ingredient, index) => (
                 <div key={index} className="">
                   <div className="flex-row">
@@ -289,25 +297,25 @@ export default function UpdateMeal() {
                       value={formData.recipe.ingredients[index].itemUnit}
                       onChange={(e) => handleIngredientChange(e, index)}
                     />
-                    {formData.recipe.ingredients.length > 1 && (
+
+                    {formData.recipe.ingredients.length > 0 && (
                       <div
                         onClick={() => handleRemoveIngredient(index)}
-                        className="font-semibold text-red-700 w-2/12 hover:text-red-500 text-center"
+                        className="font-semibold text-red-700 hover:text-red-500"
                       >
                         Remove
                       </div>
                     )}
+                    {formData.recipe.ingredients.length - 1 === index &&
+                      formData.recipe.ingredients.length < 30 && (
+                        <div
+                          onClick={handleAddIngredient}
+                          className="font-semibold text-green-700 hover:text-green-500"
+                        >
+                          Add Item
+                        </div>
+                      )}
                   </div>
-
-                  {formData.recipe.ingredients.length - 1 === index &&
-                    formData.recipe.ingredients.length < 30 && (
-                      <div
-                        onClick={handleAddIngredient}
-                        className="font-semibold text-green-700 hover:text-green-500"
-                      >
-                        Add Item
-                      </div>
-                    )}
                   {formData.recipe.ingredients.length === 30 &&
                     formData.recipe.ingredients.length - 1 === index &&
                     "Max number of ingredients reached, consider linking to an external page"}
@@ -315,6 +323,14 @@ export default function UpdateMeal() {
               ))}
             </div>
             Instructions:
+            {formData.recipe.steps.length === 0 && (
+              <div
+                onClick={handleAddStep}
+                className="font-semibold text-green-700 hover:text-green-500"
+              >
+                Add Step
+              </div>
+            )}
             {formData.recipe.steps.map((step, index) => (
               <div key={index} className="">
                 <p>Step {index + 1}</p>
@@ -329,10 +345,10 @@ export default function UpdateMeal() {
                     value={formData.recipe.steps[index]}
                     onChange={(e) => handleStepChange(e, index)}
                   />
-                  {formData.recipe.steps.length > 1 && (
+                  {formData.recipe.steps.length > 0 && (
                     <div
                       onClick={() => handleRemoveStep(index)}
-                      className="font-semibold text-red-700 w-2/12 hover:text-red-500 text-center"
+                      className="font-semibold text-red-700 hover:text-red-500"
                     >
                       Remove
                     </div>
