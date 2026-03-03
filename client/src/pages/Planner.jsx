@@ -1,259 +1,245 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { DragDropProvider } from "@dnd-kit/react";
-import { move } from "@dnd-kit/helpers";
-import DroppableDayColumn from "../components/DroppableDayColumn";
-
-const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const COLUMN_IDS = ["pool", ...DAY_ORDER];
-
-function buildInitialItems(userMeals = [], week = []) {
-  const pool = (userMeals || []).map((m) => m._id);
-  const items = {
-    pool,
-    Monday: [],
-    Tuesday: [],
-    Wednesday: [],
-    Thursday: [],
-    Friday: [],
-  };
-  (week || []).forEach((dayObj) => {
-    const day = dayObj.day;
-    if (items[day] && Array.isArray(dayObj.meals)) {
-      items[day] = dayObj.meals.map((m) => (typeof m === "object" && m._id ? m._id : m));
-    }
-  });
-  return items;
-}
-
-function buildMealsById(userMeals = [], week = []) {
-  const byId = {};
-  (userMeals || []).forEach((m) => {
-    if (m && m._id) byId[m._id] = m;
-  });
-  (week || []).forEach((dayObj) => {
-    (dayObj.meals || []).forEach((m) => {
-      if (m && m._id) byId[m._id] = m;
-    });
-  });
-  return byId;
-}
-
-function weekFromItems(items, mealsById) {
-  return DAY_ORDER.map((day) => ({
-    day,
-    meals: (items[day] || [])
-      .map((id) => mealsById[id])
-      .filter(Boolean),
-  }));
-}
+import PlannerMealModal from "../components/PlannerMealModal";
 
 export default function Planner() {
-  const [error, setError] = useState(false);
-  const [userPlanners, setUserPlanners] = useState([]);
-  const [currentPlanner, setCurrentPlanner] = useState(null);
-  const [userMeals, setUserMeals] = useState([]);
-  const [inDev] = useState(false);
-  const [items, setItems] = useState(() => buildInitialItems([], []));
-  const [mealsById, setMealsById] = useState(() => buildMealsById([], []));
-  const previousItemsRef = useRef(items);
-  const lastItemsRef = useRef(items);
-
   const { currentUser } = useSelector((state) => state.user);
-
-  const handleGetPlanner = useCallback(async () => {
-    if (!currentUser?._id) return;
-    try {
-      setError(false);
-      const res = await fetch(`/api/user/planners/${currentUser._id}`);
-      const data = await res.json();
-      if (data.success === false) {
-        setError(true);
-        return;
-      }
-      setUserPlanners(Array.isArray(data) ? data : []);
-    } catch {
-      setError(true);
-    }
-  }, [currentUser?._id]);
-
-  const fetchUserMeals = useCallback(async () => {
-    if (!currentUser?._id) return;
-    try {
-      const res = await fetch(`/api/user/meals/${currentUser._id}`);
-      const data = await res.json();
-      if (!data.success && Array.isArray(data) === false) return;
-      const list = Array.isArray(data) ? data : [];
-      setUserMeals(list);
-      setMealsById((prev) => {
-        const next = { ...prev };
-        list.forEach((m) => {
-          if (m && m._id) next[m._id] = m;
-        });
-        return next;
-      });
-    } catch {
-      // ignore
-    }
-  }, [currentUser?._id]);
+  const [planners, setPlanners] = useState([]);
+  const [userMeals, setUserMeals] = useState([]);
+  const [selectedPlannerId, setSelectedPlannerId] = useState("");
+  const [modalDay, setModalDay] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    handleGetPlanner();
-    fetchUserMeals();
-  }, [handleGetPlanner, fetchUserMeals]);
-
-  // Sync items + mealsById when currentPlanner or userMeals change
-  useEffect(() => {
-    if (!currentPlanner?.week) return;
-    const week = currentPlanner.week;
-    const nextItems = buildInitialItems(userMeals, week);
-    const nextMealsById = buildMealsById(userMeals, week);
-    setItems(nextItems);
-    setMealsById(nextMealsById);
-    previousItemsRef.current = nextItems;
-    // Intentionally stable deps to avoid overwriting local drag state
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPlanner?._id, currentPlanner?.week?.length, userMeals.length]);
-
-  const handleCreatePlanner = async () => {
-    try {
-      setError(false);
-      const res = await fetch(`/api/planner/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          week: DAY_ORDER.map((day) => ({ day, meals: [] })),
-          userRef: currentUser._id,
-        }),
-      });
-      const data = await res.json();
-      if (data.success === false) {
-        setError(true);
-        return;
-      }
-      setCurrentPlanner(data);
-      setItems(buildInitialItems(userMeals, data.week));
-      setMealsById(buildMealsById(userMeals, data.week));
-    } catch {
-      setError(true);
-    }
-  };
-
-  const selectWeek = (index) => {
-    setCurrentPlanner(userPlanners[index]);
-  };
-
-  const persistWeek = useCallback(
-    async (nextItems) => {
-      if (!currentPlanner?._id) return;
-      const week = weekFromItems(nextItems, mealsById);
+    const fetchPlanners = async () => {
       try {
-        const res = await fetch(`/api/planner/update/${currentPlanner._id}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ week }),
-        });
-        if (!res.ok) setError(true);
-      } catch {
-        setError(true);
+        setLoading(true);
+        setError("");
+        const res = await fetch("/api/planner/");
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          setError(data.message || "Problem loading planners.");
+          setPlanners([]);
+          setSelectedPlannerId("");
+          return;
+        }
+
+        const list = Array.isArray(data) ? data : [];
+        setPlanners(list);
+        setSelectedPlannerId((prev) => prev || list[0]?._id || "");
+      } catch (err) {
+        setError(err.message || "Problem loading planners.");
+        setPlanners([]);
+        setSelectedPlannerId("");
+      } finally {
+        setLoading(false);
       }
-    },
-    [currentPlanner?._id, mealsById]
+    };
+
+    fetchPlanners();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserMeals = async () => {
+      if (!currentUser?._id) return;
+      try {
+        const res = await fetch(`/api/user/meals/${currentUser._id}`);
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          setUserMeals([]);
+          return;
+        }
+        setUserMeals(Array.isArray(data) ? data : []);
+      } catch {
+        setUserMeals([]);
+      }
+    };
+
+    fetchUserMeals();
+  }, [currentUser?._id]);
+
+  const selectedPlanner = useMemo(
+    () => planners.find((planner) => planner._id === selectedPlannerId) || null,
+    [planners, selectedPlannerId]
   );
 
-  const handleDragStart = () => {
-    previousItemsRef.current = items;
-  };
-
-  const handleDragOver = (event) => {
-    if (event.canceled) return;
-    const { source } = event.operation || {};
-    if (!source?.id) return;
-    setItems((current) => {
-      const next = move(current, event);
-      lastItemsRef.current = next;
-      return next;
-    });
-  };
-
-  const handleDragEnd = (event) => {
-    if (event.canceled) {
-      setItems(previousItemsRef.current);
-      return;
-    }
-    previousItemsRef.current = lastItemsRef.current;
-    if (currentPlanner?._id) persistWeek(lastItemsRef.current);
-  };
-
-  if (inDev) {
-    return <div className="p-8">Coming Soon!</div>;
+  if (loading) {
+    return <div className="p-8">Loading planners...</div>;
   }
 
-  const hasPlanners = Array.isArray(userPlanners) && userPlanners.length > 0;
-
-  if (!hasPlanners) {
+  if (planners.length === 0) {
     return (
       <div className="p-8 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Meal planner</h1>
-        {error && <p className="text-red-600 mb-4">Error fetching data</p>}
-        <button
-          type="button"
-          onClick={handleCreatePlanner}
-          className="px-4 py-2 bg-azul-600 text-white rounded-lg hover:bg-azul-700"
+        {error && <p className="text-red-600 mb-4">{error}</p>}
+        <p className="text-lg mb-4">No planners found.</p>
+        <Link
+          to="/create-planner"
+          className="inline-block px-4 py-2 bg-azul-600 text-white rounded-lg hover:bg-azul-700"
         >
-          Create 5-day planner
-        </button>
-      </div>
-    );
-  }
-
-  if (!currentPlanner) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Select a week</h1>
-        {error && <p className="text-red-600 mb-4">Error fetching data</p>}
-        <div className="flex flex-wrap gap-2">
-          {userPlanners.map((planner, index) => (
-            <button
-              key={planner._id || index}
-              type="button"
-              onClick={() => selectWeek(index)}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-            >
-              Week {index + 1}
-            </button>
-          ))}
-        </div>
+          Create planner
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="p-4 md:p-6 min-h-screen bg-gray-50">
-      <div className="flex flex-col gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Weekly planner</h1>
-        {error && (
-          <p className="text-red-600">Error saving. Check your connection.</p>
+      <div className="flex flex-wrap gap-2 items-center mb-6">
+        {planners.map((planner) => (
+          <button
+            key={planner._id}
+            type="button"
+            onClick={() => setSelectedPlannerId(planner._id)}
+            className={`px-4 py-2 rounded-lg border ${
+              planner._id === selectedPlannerId
+                ? "bg-azul-600 text-white border-azul-700"
+                : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            {planner.name || "Unnamed planner"}
+          </button>
+        ))}
+        <Link
+          to="/create-planner"
+          className="px-4 py-2 rounded-lg bg-leaf-400 text-azul-900 hover:bg-leaf-500"
+        >
+          New Planner
+        </Link>
+        {selectedPlannerId && (
+          <Link
+            to={`/update-planner/${selectedPlannerId}`}
+            className="px-4 py-2 rounded-lg bg-slate-200 text-slate-800 hover:bg-slate-300"
+          >
+            Update Planner
+          </Link>
         )}
       </div>
 
-      <DragDropProvider
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex flex-row gap-4 overflow-x-auto pb-4">
-          {COLUMN_IDS.map((columnId) => (
-            <DroppableDayColumn
-              key={columnId}
-              columnId={columnId}
-              mealIds={items[columnId] || []}
-              mealsById={mealsById}
-              isPool={columnId === "pool"}
-            />
-          ))}
-        </div>
-      </DragDropProvider>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      {selectedPlanner && (
+        <>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">
+              {selectedPlanner.name || "Planner"}
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {selectedPlanner.plannerLength}-day planner
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {(selectedPlanner.week || []).map((dayObj) => (
+              <div key={dayObj.day} className="flex flex-col gap-2">
+                <div className="px-1">
+                  <h2 className="font-bold text-lg text-gray-800 mb-1">
+                    {dayObj.day}
+                  </h2>
+                  {dayObj.dailyGoals && (
+                    <div className="text-sm text-gray-700 mb-2">
+                      <p className="font-semibold mb-1">Daily Goals</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
+                            Calories
+                          </p>
+                          <p>{dayObj.dailyGoals.calories ?? "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
+                            Protein
+                          </p>
+                          <p>{dayObj.dailyGoals.prots ?? "-"}g</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
+                            Carbs
+                          </p>
+                          <p>{dayObj.dailyGoals.carbs ?? "-"}g</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
+                            Fats
+                          </p>
+                          <p>{dayObj.dailyGoals.fats ?? "-"}g</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-700">
+                    <p className="font-semibold mb-1">Daily Totals</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                          Calories
+                        </p>
+                        <p>{dayObj.dailyTotals?.calories ?? 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                          Protein
+                        </p>
+                        <p>{dayObj.dailyTotals?.prots ?? 0}g</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                          Carbs
+                        </p>
+                        <p>{dayObj.dailyTotals?.carbs ?? 0}g</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                          Fats
+                        </p>
+                        <p>{dayObj.dailyTotals?.fats ?? 0}g</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4 min-h-[180px] flex flex-col">
+                  <p className="font-semibold text-sm mb-2">Meals</p>
+                  <div className="flex-1">
+                    {Array.isArray(dayObj.meals) && dayObj.meals.length > 0 ? (
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        {dayObj.meals.map((meal, index) => (
+                          <li
+                            key={`${dayObj.day}-${meal?._id || "missing"}-${index}`}
+                            className="border-b border-gray-100 pb-1"
+                          >
+                            {meal?.name || "Missing meal"}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-500">No meals assigned.</p>
+                    )}
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setModalDay(dayObj.day)}
+                      className="h-8 w-8 rounded-full bg-green-600 text-white font-bold text-lg leading-none hover:bg-green-700"
+                      aria-label={`Add meal to ${dayObj.day}`}
+                      title={`Add meal to ${dayObj.day}`}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <PlannerMealModal
+        day={modalDay}
+        meals={userMeals}
+        onClose={() => setModalDay("")}
+      />
     </div>
   );
 }

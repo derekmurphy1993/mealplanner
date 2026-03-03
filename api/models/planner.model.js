@@ -36,6 +36,10 @@ const daySchema = new mongoose.Schema(
 
 const PlannerSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+    },
     plannerLength: {
       type: Number,
       enum: [5, 7],
@@ -47,10 +51,16 @@ const PlannerSchema = new mongoose.Schema(
       validate: {
         validator: function (weekValue) {
           if (!Array.isArray(weekValue)) return false;
-          if (![5, 7].includes(this.plannerLength)) return false;
-          if (weekValue.length !== this.plannerLength) return false;
+          const update = this?.getUpdate?.() || {};
+          const nextPlannerLength =
+            this?.plannerLength ??
+            update?.plannerLength ??
+            update?.$set?.plannerLength;
 
-          const expectedDays = this.plannerLength === 5 ? DAYS_5 : DAYS_7;
+          if (![5, 7].includes(nextPlannerLength)) return false;
+          if (weekValue.length !== nextPlannerLength) return false;
+
+          const expectedDays = nextPlannerLength === 5 ? DAYS_5 : DAYS_7;
           const actualDays = weekValue.map((d) => d?.day);
 
           return (

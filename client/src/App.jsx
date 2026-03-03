@@ -3,6 +3,8 @@ import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Planner from "./pages/Planner";
+import CreatePlanner from "./pages/CreatePlanner";
+import UpdatePlanner from "./pages/UpdatePlanner";
 import Profile from "./pages/Profile";
 import CreateMeal from "./pages/CreateMeal";
 import Header from "./components/Header";
@@ -24,6 +26,8 @@ export default function App() {
         <Route path="/meal/:mealId" element={<Meal />} />
         <Route element={<PrivateRoute />}>
           <Route path="/my-planner" element={<Planner />} />
+          <Route path="/create-planner" element={<CreatePlanner />} />
+          <Route path="/update-planner/:plannerId" element={<UpdatePlanner />} />
           <Route path="/recipe-book" element={<RecipeBook />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-meal" element={<CreateMeal />} />

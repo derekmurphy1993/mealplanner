@@ -38,8 +38,13 @@ export const createPlanner = async (req, res, next) => {
     const week = Array.isArray(req.body.week)
       ? req.body.week
       : Planner.defaultWeekForLength(plannerLength);
+    const requestedName =
+      typeof req.body.name === "string" ? req.body.name.trim() : "";
+    const plannerCount = await Planner.countDocuments({ userRef: req.user.id });
+    const name = requestedName || `Week ${plannerCount + 1}`;
 
     const planner = await Planner.create({
+      name,
       plannerLength,
       week,
       userRef: req.user.id,
