@@ -1,13 +1,24 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import MealCard from "./MealCard";
 
+const MEAL_TAG_OPTIONS = [
+  "breakfast",
+  "lunch",
+  "dinner",
+  "snack",
+  "vegetarian",
+];
+
 export default function Search() {
+  const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
     searchTerm: "",
     sort: "latest",
     order: "desc",
+    mealTags: [],
   });
   const [loading, setLoading] = useState(false);
   const [meals, setMeals] = useState(false);
@@ -18,17 +29,28 @@ export default function Search() {
     const searchTermFromUrl = urlParams.get("searchTerm");
     const sortFromUrl = urlParams.get("sort");
     const orderFromUrl = urlParams.get("order");
-    if (searchTermFromUrl || sortFromUrl || orderFromUrl) {
+    const mealTagsFromUrl = (urlParams.get("mealTags") || "")
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+
+    if (searchTermFromUrl || sortFromUrl || orderFromUrl || mealTagsFromUrl.length) {
       setSearchData({
         searchTerm: searchTermFromUrl || "",
         sort: sortFromUrl || "created_at",
         order: orderFromUrl || "desc",
+        mealTags: mealTagsFromUrl,
       });
     }
     const fetchListings = async () => {
       setLoading(true);
       const searchQuery = urlParams.toString();
-      const res = await fetch(`/api/meal/search?${searchQuery}`);
+      const endpoint = currentUser
+        ? `/api/meal/search?${searchQuery}${
+            searchQuery ? "&" : ""
+          }includePublic=true`
+        : `/api/meal/public/search?${searchQuery}`;
+      const res = await fetch(endpoint);
       const data = await res.json();
       if (data.length > 8) {
         setShowMore(true);
@@ -38,7 +60,7 @@ export default function Search() {
     };
 
     fetchListings();
-  }, [location.search]);
+  }, [location.search, currentUser]);
 
   const handleChange = (e) => {
     if (e.target.id === "searchTerm") {
@@ -60,9 +82,21 @@ export default function Search() {
     urlParams.set("searchTerm", searchData.searchTerm);
     urlParams.set("sort", searchData.sort);
     urlParams.set("order", searchData.order);
+    if (searchData.mealTags.length > 0) {
+      urlParams.set("mealTags", searchData.mealTags.join(","));
+    }
     const searchQuery = urlParams.toString();
 
     navigate(`/search?${searchQuery}`);
+  };
+
+  const handleMealTagToggle = (tag) => {
+    setSearchData((prev) => ({
+      ...prev,
+      mealTags: prev.mealTags.includes(tag)
+        ? prev.mealTags.filter((item) => item !== tag)
+        : [...prev.mealTags, tag],
+    }));
   };
 
   const onShowMoreClick = async () => {
@@ -71,7 +105,10 @@ export default function Search() {
     const urlParams = new URLSearchParams(location.search);
     urlParams.set("startIndex", startIndex);
     const searchQuery = urlParams.toString();
-    const res = await fetch(`/api/meal/search?${searchQuery}`);
+    const endpoint = currentUser
+      ? `/api/meal/search?${searchQuery}&includePublic=true`
+      : `/api/meal/public/search?${searchQuery}`;
+    const res = await fetch(endpoint);
     const data = await res.json();
     if (data.length < 9) {
       setShowMore(false);
@@ -106,13 +143,28 @@ export default function Search() {
               <option value="latest_asc">Oldest</option>
               <option value="calories_desc">CALORIES: High to Low</option>
               <option value="calories_asc">CALORIES: Low to High</option>
-              <option value="prots_desc">PROTIEN: High to Low</option>
-              <option value="prots_asc">PROTIEN: Low to High</option>
-              <option value="carbs_desc">CARBS: High to Low</option>
-              <option value="carbs_asc">CARBS: Low to High</option>
-              <option value="fats_desc">FAT: High to Low</option>
-              <option value="fats_asc">FAT: Low to High</option>
+              <option value="prots_desc">PROTEIN: High to Low</option>
+              <option value="prots_asc">PROTEIN: Low to High</option>
+              <option value="carbs_desc">CARBOHYDRATES: High to Low</option>
+              <option value="carbs_asc">CARBOHYDRATES: Low to High</option>
+              <option value="fats_desc">FATS: High to Low</option>
+              <option value="fats_asc">FATS: Low to High</option>
             </select>
+          </div>
+          <div className="mt-2">
+            <p className="font-semibold mb-1">Meal Type:</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {MEAL_TAG_OPTIONS.map((tag) => (
+                <label key={tag} className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={searchData.mealTags.includes(tag)}
+                    onChange={() => handleMealTagToggle(tag)}
+                  />
+                  <span className="capitalize">{tag}</span>
+                </label>
+              ))}
+            </div>
           </div>
           <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-90">
             Search

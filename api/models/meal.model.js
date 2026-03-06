@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+const MEAL_TAG_OPTIONS = [
+  "breakfast",
+  "lunch",
+  "dinner",
+  "snack",
+  "vegetarian",
+];
+
 const isValidMacroNumber = (value) => {
   if (value === null || value === undefined) return false;
   if (typeof value === "string" && value.trim() === "") return false;
@@ -9,7 +17,7 @@ const isValidMacroNumber = (value) => {
 
 const computeCompletedMacros = (meal) =>
   ["calories", "carbs", "fats", "prots"].every((key) =>
-    isValidMacroNumber(meal?.[key])
+    isValidMacroNumber(meal?.[key]),
   );
 
 const recipeSchema = new mongoose.Schema({
@@ -29,6 +37,20 @@ const mealSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+    },
+    serving: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    mealTags: {
+      type: [
+        {
+          type: String,
+          enum: MEAL_TAG_OPTIONS,
+        },
+      ],
+      default: [],
     },
     calories: {
       type: Number,
@@ -50,6 +72,11 @@ const mealSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isPublic: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     image: {
       type: String,
     },
@@ -61,7 +88,7 @@ const mealSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 mealSchema.pre("save", function (next) {

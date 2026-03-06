@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { TiDelete, TiWarningOutline } from "react-icons/ti";
 import placeholderimg from "../../assets/placeholder.png";
 
 export default function Meal() {
+  const { currentUser } = useSelector((state) => state.user);
   const [meal, getMeal] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -14,7 +16,10 @@ export default function Meal() {
   useEffect(() => {
     const fetchMeal = async () => {
       const mealId = params.mealId;
-      const res = await fetch(`/api/meal/get/${mealId}`);
+      const endpoint = currentUser
+        ? `/api/meal/get/${mealId}?includePublic=true`
+        : `/api/meal/public/${mealId}`;
+      const res = await fetch(endpoint);
       const data = await res.json();
       if (data.success === false) {
         console.log(data.message);
@@ -24,7 +29,7 @@ export default function Meal() {
     };
 
     fetchMeal();
-  }, []);
+  }, [params.mealId, currentUser]);
 
   const handleConfirmedMealDelete = async () => {
     if (!meal?._id) return;
@@ -99,6 +104,9 @@ export default function Meal() {
               </div>
 
               <div className="max-w-52 ml-5 mt-4">
+                {meal.serving && (
+                  <p className="font-semibold mb-2">Servings: {meal.serving}</p>
+                )}
                 <p className="font-semibold mb-2">Calories: {meal.calories}</p>
                 <div className="flex justify-between mx-2 flex-wrap">
                   <div className="mt-0 text-sm flex flex-col justify-center items-center">
@@ -110,7 +118,7 @@ export default function Meal() {
                     <p className="font-semibold">{meal.fats}g</p>
                   </div>
                   <div className="mt-0 text-sm flex flex-col justify-center items-center">
-                    <p className="border-b-2 border-b-slate-300">Carbs</p>
+                    <p className="border-b-2 border-b-slate-300">Carbohydrates</p>
                     <p className="font-semibold">{meal.carbs}g</p>
                   </div>{" "}
                 </div>

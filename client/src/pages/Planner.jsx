@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { BiDuplicate } from "react-icons/bi";
 import MealSearchModal from "../components/MealSearchModal";
 
 const escapeHtml = (value) =>
@@ -72,7 +73,7 @@ export default function Planner() {
 
   const selectedPlanner = useMemo(
     () => planners.find((planner) => planner._id === selectedPlannerId) || null,
-    [planners, selectedPlannerId]
+    [planners, selectedPlannerId],
   );
 
   const handlePrintShoppingList = () => {
@@ -122,36 +123,42 @@ export default function Planner() {
       });
 
       if (!hasAnyIngredientInfo) {
-        const mealKey = meal?._id || meal?.name || `missing-${mealsWithoutIngredients.size}`;
+        const mealKey =
+          meal?._id || meal?.name || `missing-${mealsWithoutIngredients.size}`;
         mealsWithoutIngredients.set(mealKey, meal?.name || "Unnamed meal");
       }
     });
 
-    const summedEntries = Array.from(ingredientTotals.values()).map((entry) => ({
-      itemName: entry.itemName,
-      unit: entry.unit,
-      amountText: Number.isInteger(entry.total)
-        ? String(entry.total)
-        : String(Number(entry.total.toFixed(2))),
-    }));
+    const summedEntries = Array.from(ingredientTotals.values()).map(
+      (entry) => ({
+        itemName: entry.itemName,
+        unit: entry.unit,
+        amountText: Number.isInteger(entry.total)
+          ? String(entry.total)
+          : String(Number(entry.total.toFixed(2))),
+      }),
+    );
 
-    const sortedEntries = [...summedEntries, ...ingredientEntries].sort((a, b) => {
-      const byName = a.itemName.localeCompare(b.itemName, undefined, {
-        sensitivity: "base",
-      });
-      if (byName !== 0) return byName;
-      return a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" });
-    });
+    const sortedEntries = [...summedEntries, ...ingredientEntries].sort(
+      (a, b) => {
+        const byName = a.itemName.localeCompare(b.itemName, undefined, {
+          sensitivity: "base",
+        });
+        if (byName !== 0) return byName;
+        return a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" });
+      },
+    );
 
     const ingredientListMarkup =
       sortedEntries.length > 0
         ? sortedEntries
-            .map((entry) =>
-              `<li>${escapeHtml(
-                [entry.amountText, entry.unit, entry.itemName]
-                  .filter(Boolean)
-                  .join(" ")
-              )}</li>`
+            .map(
+              (entry) =>
+                `<li>${escapeHtml(
+                  [entry.amountText, entry.unit, entry.itemName]
+                    .filter(Boolean)
+                    .join(" "),
+                )}</li>`,
             )
             .join("")
         : "<li>No ingredients found for this week.</li>";
@@ -223,7 +230,9 @@ export default function Planner() {
     }
 
     setPlanners((prev) =>
-      prev.map((planner) => (planner._id === selectedPlanner._id ? data : planner))
+      prev.map((planner) =>
+        planner._id === selectedPlanner._id ? data : planner,
+      ),
     );
     return true;
   };
@@ -424,7 +433,9 @@ export default function Planner() {
             {(selectedPlanner.week || []).map((dayObj) => (
               <div key={dayObj.day} className="flex flex-col gap-2">
                 <div className="px-1">
-                  <h2 className="font-bold text-lg text-gray-800 mb-1">{dayObj.day}</h2>
+                  <h2 className="font-bold text-lg text-gray-800 mb-1">
+                    {dayObj.day}
+                  </h2>
                   {dayObj.dailyGoals && (
                     <div className="text-sm text-gray-700 mb-2">
                       <p className="font-semibold mb-1">Daily Goals</p>
@@ -443,7 +454,7 @@ export default function Planner() {
                         </div>
                         <div>
                           <p className="text-xs uppercase tracking-wide text-gray-500">
-                            Carbs
+                            Carbohydrates
                           </p>
                           <p>{dayObj.dailyGoals.carbs ?? "-"}g</p>
                         </div>
@@ -473,7 +484,7 @@ export default function Planner() {
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-wide text-gray-500">
-                          Carbs
+                          Carbohydrates
                         </p>
                         <p>{dayObj.dailyTotals?.carbs ?? 0}g</p>
                       </div>
@@ -511,15 +522,17 @@ export default function Planner() {
                                 </p>
                               )}
                               <p className="text-xs text-gray-500">
-                                {meal?.calories ?? 0} cal | {meal?.prots ?? 0}g
-                                {" "}protein | {meal?.carbs ?? 0}g carbs |{" "}
+                                {meal?.calories ?? 0} cal | {meal?.prots ?? 0}g{" "}
+                                protein | {meal?.carbs ?? 0}g carbohydrates |{" "}
                                 {meal?.fats ?? 0}g fats
                               </p>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
                               <button
                                 type="button"
-                                onClick={() => handleRemoveMealFromDay(dayObj.day, index)}
+                                onClick={() =>
+                                  handleRemoveMealFromDay(dayObj.day, index)
+                                }
                                 disabled={Boolean(dayMealActionKey)}
                                 className="h-6 w-6 rounded-full bg-red-600 text-white text-sm leading-none font-bold hover:bg-red-700 disabled:opacity-60"
                                 aria-label={`Remove ${meal?.name || "meal"} from ${dayObj.day}`}
@@ -529,20 +542,24 @@ export default function Planner() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDuplicateMealInDay(dayObj.day, index)}
+                                onClick={() =>
+                                  handleDuplicateMealInDay(dayObj.day, index)
+                                }
                                 disabled={Boolean(dayMealActionKey)}
-                                className="h-6 w-7 rounded-full bg-green-600 text-white text-xs leading-none font-bold hover:bg-green-700 disabled:opacity-60"
+                                className="h-6 w-6 rounded-full bg-green-600 text-white text-xs font-bold hover:bg-green-700 disabled:opacity-60 flex items-center justify-center"
                                 aria-label={`Duplicate ${meal?.name || "meal"} in ${dayObj.day}`}
                                 title={`Duplicate ${meal?.name || "meal"} in ${dayObj.day}`}
                               >
-                                ++
+                                <BiDuplicate />
                               </button>
                             </div>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-sm text-gray-500">No meals assigned.</p>
+                      <p className="text-sm text-gray-500">
+                        No meals assigned.
+                      </p>
                     )}
                   </div>
                   <div className="mt-3 flex justify-end">

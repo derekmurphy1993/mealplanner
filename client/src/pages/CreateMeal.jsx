@@ -2,19 +2,75 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
+const MACRO_FIELDS = new Set(["calories", "carbs", "fats", "prots"]);
+const MEAL_TAG_OPTIONS = [
+  "breakfast",
+  "lunch",
+  "dinner",
+  "snack",
+  "vegetarian",
+];
+
+const isValidNumericInput = (value) => /^-?\d*\.?\d*$/.test(value);
+
+const sanitizeFormPayload = (formData) => {
+  const payload = { ...formData };
+  payload.serving = (payload.serving || "").trim();
+  payload.mealTags = Array.isArray(payload.mealTags)
+    ? payload.mealTags.filter((tag) => MEAL_TAG_OPTIONS.includes(tag))
+    : [];
+
+  for (const field of MACRO_FIELDS) {
+    const raw = payload[field];
+    if (raw === "" || raw === null || raw === undefined) {
+      payload[field] = null;
+      continue;
+    }
+
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return null;
+    payload[field] = parsed;
+  }
+
+  if (Array.isArray(payload?.recipe?.ingredients)) {
+    payload.recipe = {
+      ...payload.recipe,
+      ingredients: payload.recipe.ingredients.map((ingredient) => {
+        const rawAmount = ingredient?.itemAmount;
+        if (rawAmount === "" || rawAmount === null || rawAmount === undefined) {
+          return { ...ingredient, itemAmount: null };
+        }
+
+        const parsedAmount = Number(rawAmount);
+        if (!Number.isFinite(parsedAmount)) return null;
+        return { ...ingredient, itemAmount: parsedAmount };
+      }),
+    };
+
+    if (payload.recipe.ingredients.some((ingredient) => ingredient === null)) {
+      return null;
+    }
+  }
+
+  return payload;
+};
+
 export default function CreateMeal() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const [showAddRecipe, setShowAddRecipe] = useState(true);
+  const [showAddRecipe, setShowAddRecipe] = useState(false);
+  const [showMealTypeOptions, setShowMealTypeOptions] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
-    calories: null,
-    fats: null,
-    carbs: null,
-    prots: null,
+    serving: "",
+    mealTags: [],
+    calories: "",
+    fats: "",
+    carbs: "",
+    prots: "",
     image: "",
     recipe: {
       url: "",
@@ -58,7 +114,7 @@ export default function CreateMeal() {
         ...formData.recipe,
         ingredients: [
           ...formData.recipe.ingredients,
-          { itemName: "", itemAmount: 0, itemUnit: "" },
+          { itemName: "", itemAmount: "", itemUnit: "" },
         ],
       },
     });
@@ -86,15 +142,23 @@ export default function CreateMeal() {
         },
       });
       return;
-    } else {
-      setFormData({
-        ...formData,
-        [e.target.id]: e.target.value,
-      });
     }
+
+    if (MACRO_FIELDS.has(e.target.id) && !isValidNumericInput(e.target.value)) {
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
   };
 
   const handleIngredientChange = (e, index) => {
+    if (e.target.id === "itemAmount" && !isValidNumericInput(e.target.value)) {
+      return;
+    }
+
     const ingredientList = [...formData.recipe.ingredients];
     ingredientList[index][e.target.id] = e.target.value;
 
@@ -121,18 +185,37 @@ export default function CreateMeal() {
     return;
   };
 
+  const handleMealTagToggle = (tag) => {
+    setFormData((prev) => {
+      const nextTags = prev.mealTags.includes(tag)
+        ? prev.mealTags.filter((item) => item !== tag)
+        : [...prev.mealTags, tag];
+
+      return {
+        ...prev,
+        mealTags: nextTags,
+      };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       setError(false);
+      const sanitizedFormData = sanitizeFormPayload(formData);
+      if (!sanitizedFormData) {
+        setError("Macros and ingredient amounts must be valid numbers.");
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/meal/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
+          ...sanitizedFormData,
           userRef: currentUser._id,
         }),
       });
@@ -166,6 +249,15 @@ export default function CreateMeal() {
             onChange={handleChange}
             value={formData.name}
           />
+          <input
+            type="text"
+            placeholder="Servings (optional)"
+            className="border p-3 rounded-lg"
+            id="serving"
+            maxLength="120"
+            onChange={handleChange}
+            value={formData.serving}
+          />
           <p className="">
             Calories{" "}
             <span className="text-sm font-light text-gray-500 italic">
@@ -174,7 +266,8 @@ export default function CreateMeal() {
           </p>
           <input
             type="number"
-            placeholder="Calories p/ serving"
+            inputMode="decimal"
+            placeholder="Calories per serving"
             className="border p-3 rounded-lg"
             id="calories"
             onChange={handleChange}
@@ -188,7 +281,8 @@ export default function CreateMeal() {
           </p>
           <input
             type="number"
-            placeholder="Carbs p/ serving (grams)"
+            inputMode="decimal"
+            placeholder="Carbohydrates /grams per serving"
             className="border p-3 mt-1 rounded-lg"
             id="carbs"
             onChange={handleChange}
@@ -202,26 +296,51 @@ export default function CreateMeal() {
           </p>
           <input
             type="number"
+            inputMode="decimal"
             className="border p-3 rounded-lg"
-            placeholder="Fats p/ serving (grams)"
+            placeholder="Fats /grams per serving"
             id="fats"
             onChange={handleChange}
             value={formData.fats}
           />
           <p className="">
-            Protien{" "}
+            Protein{" "}
             <span className="text-sm font-light text-gray-500 italic">
               grams per serving
             </span>
           </p>
           <input
             type="number"
+            inputMode="decimal"
             className="border p-3 rounded-lg"
-            placeholder="Protien p/ serving (grams)"
+            placeholder="Protein /grams per serving"
             id="prots"
             onChange={handleChange}
             value={formData.prots}
           />
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowMealTypeOptions((prev) => !prev)}
+              className="w-full border rounded-lg p-3 text-left font-semibold hover:bg-gray-50"
+            >
+              Meal Type (optional) {showMealTypeOptions ? "▴" : "▾"}
+            </button>
+            {showMealTypeOptions && (
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                {MEAL_TAG_OPTIONS.map((tag) => (
+                  <label key={tag} className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.mealTags.includes(tag)}
+                      onChange={() => handleMealTagToggle(tag)}
+                    />
+                    <span className="capitalize">{tag}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex">
             <p className="mr-3"> Add Recipe Info </p>
             <input
@@ -272,6 +391,7 @@ export default function CreateMeal() {
                     />
                     <input
                       type="number"
+                      inputMode="decimal"
                       placeholder="Amount"
                       className="border p-3 rounded-lg"
                       id="itemAmount"

@@ -192,7 +192,7 @@ export default function UpdatePlanner() {
             <input
               type="number"
               inputMode="numeric"
-              placeholder="Carbs (g)"
+              placeholder="Carbohydrates (g)"
               className="border rounded-lg p-3"
               value={dailyGoals.carbs}
               onChange={(e) =>

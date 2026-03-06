@@ -6,16 +6,33 @@ import authRouter from "./routes/auth.route.js";
 import mealRouter from "./routes/meal.route.js";
 import plannerRouter from "./routes/planner.route.js";
 import cookieParser from "cookie-parser";
+import { createRateLimiter } from "./utils/rateLimit.js";
 dotenv.config();
 
 const app = express();
 
-app.use(express.json());
+app.set("trust proxy", 1);
+
+const globalLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: "Too many requests. Please try again shortly.",
+});
+
+const authLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: "Too many authentication attempts. Please try again later.",
+});
+
+app.use(globalLimiter);
+app.use(express.json({ limit: "200kb" }));
+app.use(express.urlencoded({ extended: true, limit: "200kb" }));
 
 app.use(cookieParser());
 
 app.use("/api/user", userRouter);
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/meal", mealRouter);
 app.use("/api/planner", plannerRouter);
 

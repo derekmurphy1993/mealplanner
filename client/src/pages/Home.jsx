@@ -49,7 +49,7 @@ export default function Home() {
             Set Nutrition Goals and Build a Plan
           </p>
           <p className="text-lg  mt-4 text-azul-800">
-            Set daily nutrional targets for Calories, protiens, fat, and carb
+            Set daily nutrional targets for Calories, proteins, fat, and carb
             intake. Drag and drop meals to fit your range and build out a weekly
             meal schedule.
           </p>

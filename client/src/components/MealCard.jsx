@@ -52,7 +52,7 @@ export default function MealCard({ meal }) {
               <p className="font-semibold">{meal.fats}g</p>
             </div>
             <div className="mt-0 text-sm flex flex-col justify-center items-center">
-              <p className="border-b-2 border-b-slate-300">Carbs</p>
+              <p className="border-b-2 border-b-slate-300">Carbohydrates</p>
               <p className="font-semibold">{meal.carbs}g</p>
             </div>{" "}
           </div>
