@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import MealCard from "./MealCard";
+import { apiFetch } from "../utils/api";
 
 const MEAL_TAG_OPTIONS = [
   "breakfast",
@@ -50,7 +51,7 @@ export default function Search() {
             searchQuery ? "&" : ""
           }includePublic=true`
         : `/api/meal/public/search?${searchQuery}`;
-      const res = await fetch(endpoint);
+      const res = await apiFetch(endpoint);
       const data = await res.json();
       if (data.length > 8) {
         setShowMore(true);
@@ -108,7 +109,7 @@ export default function Search() {
     const endpoint = currentUser
       ? `/api/meal/search?${searchQuery}&includePublic=true`
       : `/api/meal/public/search?${searchQuery}`;
-    const res = await fetch(endpoint);
+    const res = await apiFetch(endpoint);
     const data = await res.json();
     if (data.length < 9) {
       setShowMore(false);

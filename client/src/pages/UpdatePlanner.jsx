@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 const DAY_5 = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_7 = [...DAY_5, "Saturday", "Sunday"];
@@ -43,7 +44,7 @@ export default function UpdatePlanner() {
       try {
         setLoading(true);
         setError("");
-        const res = await fetch(`/api/planner/${plannerId}`);
+        const res = await apiFetch(`/api/planner/${plannerId}`);
         const data = await res.json();
         if (!res.ok || data.success === false) {
           setError(data.message || "Problem loading planner.");
@@ -106,7 +107,7 @@ export default function UpdatePlanner() {
         payload.name = "";
       }
 
-      const res = await fetch(`/api/planner/${plannerId}`, {
+      const res = await apiFetch(`/api/planner/${plannerId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -10,6 +10,7 @@ import { createRateLimiter } from "./utils/rateLimit.js";
 dotenv.config();
 
 const app = express();
+const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
 
 app.set("trust proxy", 1);
 
@@ -30,6 +31,26 @@ app.use(express.json({ limit: "200kb" }));
 app.use(express.urlencoded({ extended: true, limit: "200kb" }));
 
 app.use(cookieParser());
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  return next();
+});
 
 app.use("/api/user", userRouter);
 app.use("/api/auth", authLimiter, authRouter);

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 const DAY_5 = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_7 = [...DAY_5, "Saturday", "Sunday"];
@@ -54,7 +55,7 @@ export default function CreatePlanner() {
         payload.name = name.trim();
       }
 
-      const res = await fetch("/api/planner/", {
+      const res = await apiFetch("/api/planner/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

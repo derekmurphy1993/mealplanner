@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { BiDuplicate } from "react-icons/bi";
 import MealSearchModal from "../components/MealSearchModal";
+import { apiFetch } from "../utils/api";
 
 const escapeHtml = (value) =>
   String(value ?? "")
@@ -28,7 +29,7 @@ export default function Planner() {
       try {
         setLoading(true);
         setError("");
-        const res = await fetch("/api/planner/");
+        const res = await apiFetch("/api/planner/");
         const data = await res.json();
         if (!res.ok || data.success === false) {
           setError(data.message || "Problem loading planners.");
@@ -56,7 +57,7 @@ export default function Planner() {
     const fetchUserMeals = async () => {
       if (!currentUser?._id) return;
       try {
-        const res = await fetch(`/api/user/meals/${currentUser._id}`);
+        const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
         const data = await res.json();
         if (!res.ok || data.success === false) {
           setUserMeals([]);
@@ -217,7 +218,7 @@ export default function Planner() {
       week,
     };
 
-    const res = await fetch(`/api/planner/${selectedPlanner._id}`, {
+    const res = await apiFetch(`/api/planner/${selectedPlanner._id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

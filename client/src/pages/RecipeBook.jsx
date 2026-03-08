@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import MealCard from "../components/MealCard";
+import { apiFetch } from "../utils/api";
 
 export default function RecipeBook() {
   const { currentUser } = useSelector((state) => state.user);
@@ -11,7 +12,7 @@ export default function RecipeBook() {
   const handleGetMeals = async () => {
     try {
       setShowMealError(false);
-      const res = await fetch(`/api/user/meals/${currentUser._id}`);
+      const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
       const data = await res.json();
       if (data.success === false) {
         setShowMealError(true);

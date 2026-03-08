@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { TiDelete, TiWarningOutline } from "react-icons/ti";
 import placeholderimg from "../../assets/placeholder.png";
+import { apiFetch } from "../utils/api";
 
 export default function Meal() {
   const { currentUser } = useSelector((state) => state.user);
@@ -19,7 +20,7 @@ export default function Meal() {
       const endpoint = currentUser
         ? `/api/meal/get/${mealId}?includePublic=true`
         : `/api/meal/public/${mealId}`;
-      const res = await fetch(endpoint);
+      const res = await apiFetch(endpoint);
       const data = await res.json();
       if (data.success === false) {
         console.log(data.message);
@@ -36,7 +37,7 @@ export default function Meal() {
     try {
       setDeleting(true);
       setDeleteError("");
-      const res = await fetch(`/api/meal/delete/${meal._id}`, {
+      const res = await apiFetch(`/api/meal/delete/${meal._id}`, {
         method: "DELETE",
       });
       const data = await res.json();

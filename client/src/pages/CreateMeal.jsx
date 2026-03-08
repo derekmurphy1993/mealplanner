@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 const MACRO_FIELDS = new Set(["calories", "carbs", "fats", "prots"]);
 const MEAL_TAG_OPTIONS = [
@@ -209,7 +210,7 @@ export default function CreateMeal() {
         setLoading(false);
         return;
       }
-      const res = await fetch("/api/meal/create", {
+      const res = await apiFetch("/api/meal/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
