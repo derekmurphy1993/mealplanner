@@ -10,7 +10,21 @@ import { createRateLimiter } from "./utils/rateLimit.js";
 dotenv.config();
 
 const app = express();
-const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
+const normalizeOrigin = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\/$/, "");
+
+const allowedOrigins = [
+  ...String(process.env.CLIENT_URL || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean),
+  ...String(process.env.CLIENT_URLS || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean),
+];
 
 app.set("trust proxy", 1);
 
@@ -32,9 +46,13 @@ app.use(express.urlencoded({ extended: true, limit: "200kb" }));
 
 app.use(cookieParser());
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
+  const origin = normalizeOrigin(req.headers.origin);
+  const isAllowedOrigin =
+    Boolean(origin) &&
+    (allowedOrigins.includes(origin) ||
+      (process.env.NODE_ENV !== "production" && allowedOrigins.length === 0));
 
-  if (origin && allowedOrigins.includes(origin)) {
+  if (isAllowedOrigin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -42,7 +60,10 @@ app.use((req, res, next) => {
       "Access-Control-Allow-Headers",
       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     );
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    );
   }
 
   if (req.method === "OPTIONS") {
