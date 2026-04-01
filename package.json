@@ -6,7 +6,12 @@
 	"type": "module",
 	"scripts": {
 		"dev": "nodemon api/index.js",
-		"start": "node api/index.js"
+		"start": "node api/index.js",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:api": "vitest run",
+		"test:client": "npm --prefix client run test",
+		"test:all": "npm run test:api && npm run test:client"
 	},
 	"repository": {
 		"type": "git",
@@ -27,5 +32,8 @@
 		"jsonwebtoken": "^9.0.2",
 		"mongoose": "^8.4.4",
 		"nodemon": "^3.1.4"
+	},
+	"devDependencies": {
+		"vitest": "^3.2.4"
 	}
 }

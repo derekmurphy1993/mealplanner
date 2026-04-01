@@ -120,16 +120,13 @@ export default function UpdateMeal() {
       const res = await apiFetch(`/api/meal/get/${mealId}`);
       const data = await res.json();
       if (data.success === false) {
-        console.log(data.message);
         return;
       }
       setFormData(normalizeMealForForm(data));
     };
 
     fetchMeal();
-  }, []);
-
-  console.log(currentUser);
+  }, [params.mealId]);
 
   const checkHandler = () => {
     setShowAddRecipe(!showAddRecipe);

@@ -154,13 +154,13 @@ export default function MealSearchModal({
                     <div className="relative group/warn">
                       <span
                         className="text-yellow-500 font-bold cursor-help"
-                        aria-label="incomplete macro's information"
-                        title="incomplete macro's information"
+                        aria-label="incomplete macro information"
+                        title="incomplete macro information"
                       >
                         ⚠
                       </span>
                       <div className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 z-20 w-36 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover/warn:opacity-100">
-                        incomplete macro's information
+                        incomplete macro information
                       </div>
                     </div>
                   )}

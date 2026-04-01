@@ -9,24 +9,24 @@ export default function RecipeBook() {
   const [showMealError, setShowMealError] = useState("");
   const [userMeals, setUserMeals] = useState([]);
 
-  const handleGetMeals = async () => {
-    try {
-      setShowMealError(false);
-      const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
-      const data = await res.json();
-      if (data.success === false) {
-        setShowMealError(true);
-        return;
-      }
-      setUserMeals(data);
-    } catch (error) {
-      setShowMealError(error.message);
-    }
-  };
-
   useEffect(() => {
+    const handleGetMeals = async () => {
+      try {
+        setShowMealError(false);
+        const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
+        const data = await res.json();
+        if (data.success === false) {
+          setShowMealError(true);
+          return;
+        }
+        setUserMeals(data);
+      } catch (error) {
+        setShowMealError(error.message);
+      }
+    };
+
     handleGetMeals();
-  }, []);
+  }, [currentUser._id]);
 
   return (
     <div className="flex flex-col">
