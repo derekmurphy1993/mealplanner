@@ -20,6 +20,7 @@ import {
 } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { apiFetch } from "../utils/api";
+import AvatarImage from "../components/AvatarImage";
 
 export default function Profile() {
   const { currentUser, loading, error } = useSelector((state) => state.user);
@@ -153,10 +154,11 @@ export default function Profile() {
           accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
         />
-        <img
+        <AvatarImage
           onClick={() => fileRef.current.click()}
           className="rounded-full h-24 w-24 object-cover border-red-200 cursor-pointer self-center mt-2"
           src={currentUser.avatar}
+          alt="profile picture"
         />
         {fileUploadError ? (
           <p className="text-red-700 text-sm text-center">

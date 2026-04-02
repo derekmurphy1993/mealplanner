@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { sanitizePlannerFormPayload } from "../utils/plannerForm";
 
 const DAY_5 = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_7 = [...DAY_5, "Saturday", "Sunday"];
@@ -23,36 +24,22 @@ export default function CreatePlanner() {
     [plannerLength]
   );
 
-  const numericGoals = useMemo(() => {
-    const parsed = {
-      calories: dailyGoals.calories === "" ? undefined : Number(dailyGoals.calories),
-      carbs: dailyGoals.carbs === "" ? undefined : Number(dailyGoals.carbs),
-      prots: dailyGoals.prots === "" ? undefined : Number(dailyGoals.prots),
-      fats: dailyGoals.fats === "" ? undefined : Number(dailyGoals.fats),
-    };
-    const hasAnyGoal = Object.values(parsed).some((v) => v !== undefined);
-    return { parsed, hasAnyGoal };
-  }, [dailyGoals]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const week = dayList.map((day) => ({
-        day,
-        meals: [],
-        ...(numericGoals.hasAnyGoal ? { dailyGoals: numericGoals.parsed } : {}),
-      }));
-
-      const payload = {
+      const { payload, error: validationError } = sanitizePlannerFormPayload({
+        name,
         plannerLength,
-        week,
-      };
-
-      if (name.trim()) {
-        payload.name = name.trim();
+        dayList,
+        dailyGoals,
+      });
+      if (validationError) {
+        setError(validationError);
+        setLoading(false);
+        return;
       }
 
       const res = await apiFetch("/api/planner/", {
@@ -167,7 +154,11 @@ export default function CreatePlanner() {
           </div>
         </div>
 
-        {error && <p className="text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="text-red-600">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"

@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import {
+  isValidNumericInput,
+  sanitizeMealFormPayload,
+} from "../utils/mealForm";
 
 const MACRO_FIELDS = new Set(["calories", "carbs", "fats", "prots"]);
 const MEAL_TAG_OPTIONS = [
@@ -11,50 +15,6 @@ const MEAL_TAG_OPTIONS = [
   "snack",
   "vegetarian",
 ];
-
-const isValidNumericInput = (value) => /^-?\d*\.?\d*$/.test(value);
-
-const sanitizeFormPayload = (formData) => {
-  const payload = { ...formData };
-  payload.serving = (payload.serving || "").trim();
-  payload.mealTags = Array.isArray(payload.mealTags)
-    ? payload.mealTags.filter((tag) => MEAL_TAG_OPTIONS.includes(tag))
-    : [];
-
-  for (const field of MACRO_FIELDS) {
-    const raw = payload[field];
-    if (raw === "" || raw === null || raw === undefined) {
-      payload[field] = null;
-      continue;
-    }
-
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return null;
-    payload[field] = parsed;
-  }
-
-  if (Array.isArray(payload?.recipe?.ingredients)) {
-    payload.recipe = {
-      ...payload.recipe,
-      ingredients: payload.recipe.ingredients.map((ingredient) => {
-        const rawAmount = ingredient?.itemAmount;
-        if (rawAmount === "" || rawAmount === null || rawAmount === undefined) {
-          return { ...ingredient, itemAmount: null };
-        }
-
-        const parsedAmount = Number(rawAmount);
-        if (!Number.isFinite(parsedAmount)) return null;
-        return { ...ingredient, itemAmount: parsedAmount };
-      }),
-    };
-
-    if (payload.recipe.ingredients.some((ingredient) => ingredient === null)) {
-      return null;
-    }
-  }
-
-  return payload;
-};
 
 export default function CreateMeal() {
   const { currentUser } = useSelector((state) => state.user);
@@ -79,8 +39,6 @@ export default function CreateMeal() {
       ingredients: [],
     },
   });
-
-  console.log(currentUser);
 
   const checkHandler = () => {
     setShowAddRecipe(!showAddRecipe);
@@ -204,9 +162,10 @@ export default function CreateMeal() {
     try {
       setLoading(true);
       setError(false);
-      const sanitizedFormData = sanitizeFormPayload(formData);
-      if (!sanitizedFormData) {
-        setError("Macros and ingredient amounts must be valid numbers.");
+      const { payload: sanitizedFormData, error: validationError } =
+        sanitizeMealFormPayload(formData);
+      if (validationError) {
+        setError(validationError);
         setLoading(false);
         return;
       }
@@ -222,12 +181,13 @@ export default function CreateMeal() {
       });
       const data = await res.json();
       setLoading(false);
-      if (data.success === false) {
-        setError(data.message);
+      if (!res.ok || data.success === false) {
+        setError(data.message || "Problem saving meal.");
+        return;
       }
       navigate(`/meal/${data._id}`);
     } catch (error) {
-      setError(error.message);
+      setError(error.message || "Problem saving meal.");
       setLoading(false);
     }
   };
@@ -488,7 +448,11 @@ export default function CreateMeal() {
         >
           {loading ? "Saving Meal..." : "Save Meal"}
         </button>
-        {error && <p className="text-red-700 text-sm">{error}</p>}
+        {error && (
+          <p role="alert" className="text-red-700 text-sm">
+            {error}
+          </p>
+        )}
       </form>
     </main>
   );

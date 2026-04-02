@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import AvatarImage from "./AvatarImage";
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
@@ -24,7 +25,7 @@ export default function Header() {
           </Link>
           <Link to={`/profile`}>
             {currentUser ? (
-              <img
+              <AvatarImage
                 src={currentUser.avatar}
                 className="rounded-full h-7 w-7 object-cover"
                 alt="profile picture"

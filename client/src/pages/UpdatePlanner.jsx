@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { sanitizePlannerFormPayload } from "../utils/plannerForm";
 
 const DAY_5 = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_7 = [...DAY_5, "Saturday", "Sunday"];
@@ -26,18 +27,6 @@ export default function UpdatePlanner() {
     () => (plannerLength === 7 ? DAY_7 : DAY_5),
     [plannerLength]
   );
-
-  const numericGoals = useMemo(() => {
-    const parsed = {
-      calories:
-        dailyGoals.calories === "" ? undefined : Number(dailyGoals.calories),
-      carbs: dailyGoals.carbs === "" ? undefined : Number(dailyGoals.carbs),
-      prots: dailyGoals.prots === "" ? undefined : Number(dailyGoals.prots),
-      fats: dailyGoals.fats === "" ? undefined : Number(dailyGoals.fats),
-    };
-    const hasAnyGoal = Object.values(parsed).some((v) => v !== undefined);
-    return { parsed, hasAnyGoal };
-  }, [dailyGoals]);
 
   useEffect(() => {
     const fetchPlanner = async () => {
@@ -81,30 +70,17 @@ export default function UpdatePlanner() {
     setError("");
 
     try {
-      const byDay = new Map((existingWeek || []).map((day) => [day.day, day]));
-      const week = dayList.map((day) => {
-        const existingDay = byDay.get(day);
-        const meals = Array.isArray(existingDay?.meals)
-          ? existingDay.meals
-              .map((meal) => (typeof meal === "object" ? meal?._id : meal))
-              .filter(Boolean)
-          : [];
-        return {
-          day,
-          meals,
-          ...(numericGoals.hasAnyGoal ? { dailyGoals: numericGoals.parsed } : {}),
-        };
-      });
-
-      const payload = {
+      const { payload, error: validationError } = sanitizePlannerFormPayload({
+        name,
         plannerLength,
-        week,
-      };
-
-      if (name.trim()) {
-        payload.name = name.trim();
-      } else {
-        payload.name = "";
+        dayList,
+        dailyGoals,
+        existingWeek,
+      });
+      if (validationError) {
+        setError(validationError);
+        setSaving(false);
+        return;
       }
 
       const res = await apiFetch(`/api/planner/${plannerId}`, {
@@ -223,7 +199,11 @@ export default function UpdatePlanner() {
           </div>
         </div>
 
-        {error && <p className="text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="text-red-600">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
