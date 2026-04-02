@@ -8,20 +8,26 @@ export default function RecipeBook() {
   const { currentUser } = useSelector((state) => state.user);
   const [showMealError, setShowMealError] = useState("");
   const [userMeals, setUserMeals] = useState([]);
+  const [loadingMeals, setLoadingMeals] = useState(true);
 
   useEffect(() => {
     const handleGetMeals = async () => {
       try {
-        setShowMealError(false);
+        setLoadingMeals(true);
+        setShowMealError("");
         const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
         const data = await res.json();
-        if (data.success === false) {
-          setShowMealError(true);
+        if (!res.ok || data.success === false) {
+          setUserMeals([]);
+          setShowMealError(data.message || "Problem loading meals.");
           return;
         }
-        setUserMeals(data);
+        setUserMeals(Array.isArray(data) ? data : []);
       } catch (error) {
+        setUserMeals([]);
         setShowMealError(error.message);
+      } finally {
+        setLoadingMeals(false);
       }
     };
 
@@ -37,17 +43,19 @@ export default function RecipeBook() {
         </p>
       </Link>
 
-      {userMeals.length < 1 && (
+      {loadingMeals && (
+        <p className="mt-4 text-center text-slate-600">Loading meals...</p>
+      )}
+      {!loadingMeals && !showMealError && userMeals.length < 1 && (
         <p className="text-red-600 mt-4 text-center font-semibold">
-          {" "}
           No meals found, add some in your recipe book
         </p>
       )}
       {showMealError && (
-        <p className="text-red-600 mt-4 text-center"> {showMealError} </p>
+        <p className="text-red-600 mt-4 text-center">{showMealError}</p>
       )}
 
-      {userMeals && userMeals.length > 0 && (
+      {!loadingMeals && userMeals.length > 0 && (
         <div className="flex flex-row flex-wrap gap-3 justify-around">
           {userMeals.map((meal, index) => (
             <MealCard key={meal._id} meal={meal} index={index} />

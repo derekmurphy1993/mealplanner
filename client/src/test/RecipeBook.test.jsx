@@ -17,8 +17,28 @@ describe("RecipeBook smoke test", () => {
     vi.clearAllMocks();
   });
 
+  it("shows a loading state before meals resolve", () => {
+    apiFetchMock.mockImplementation(() => new Promise(() => {}));
+
+    renderWithProviders(<RecipeBook />, {
+      preloadedState: {
+        user: {
+          currentUser: { _id: "user-123", username: "tester" },
+          error: null,
+          loading: false,
+        },
+      },
+    });
+
+    expect(screen.getByText("Loading meals...")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/No meals found, add some in your recipe book/i)
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the empty state when the user has no meals", async () => {
     apiFetchMock.mockResolvedValue({
+      ok: true,
       json: async () => [],
     });
 
@@ -39,6 +59,7 @@ describe("RecipeBook smoke test", () => {
 
   it("renders fetched meals for the signed-in user", async () => {
     apiFetchMock.mockResolvedValue({
+      ok: true,
       json: async () => [
         { _id: "meal-1", name: "Turkey Chili" },
         { _id: "meal-2", name: "Protein Oats" },

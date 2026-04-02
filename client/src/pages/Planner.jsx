@@ -20,6 +20,7 @@ export default function Planner() {
   const [selectedPlannerId, setSelectedPlannerId] = useState("");
   const [modalDay, setModalDay] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMeals, setLoadingMeals] = useState(true);
   const [error, setError] = useState("");
   const [addingMealId, setAddingMealId] = useState("");
   const [dayMealActionKey, setDayMealActionKey] = useState("");
@@ -55,8 +56,13 @@ export default function Planner() {
 
   useEffect(() => {
     const fetchUserMeals = async () => {
-      if (!currentUser?._id) return;
+      if (!currentUser?._id) {
+        setUserMeals([]);
+        setLoadingMeals(false);
+        return;
+      }
       try {
+        setLoadingMeals(true);
         const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
         const data = await res.json();
         if (!res.ok || data.success === false) {
@@ -66,6 +72,8 @@ export default function Planner() {
         setUserMeals(Array.isArray(data) ? data : []);
       } catch {
         setUserMeals([]);
+      } finally {
+        setLoadingMeals(false);
       }
     };
 
@@ -584,6 +592,7 @@ export default function Planner() {
       <MealSearchModal
         day={modalDay}
         meals={userMeals}
+        loading={loadingMeals}
         onAddMeal={handleAddMealToDay}
         addingMealId={addingMealId}
         onClose={() => setModalDay("")}

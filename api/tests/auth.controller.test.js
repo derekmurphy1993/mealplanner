@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../models/user.model.js", () => ({
   default: {
     findOne: vi.fn(),
+    findById: vi.fn(),
   },
 }));
 
@@ -22,7 +23,7 @@ vi.mock("jsonwebtoken", () => ({
 import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { signin } from "../controllers/auth.controller.js";
+import { getMe, signin } from "../controllers/auth.controller.js";
 
 const createResponse = () => {
   const res = {};
@@ -117,5 +118,39 @@ describe("auth controller smoke tests", () => {
         message: "Wrong Credentials",
       })
     );
+  });
+
+  it("returns the current user when the session is valid", async () => {
+    const req = {
+      user: {
+        id: "user-123",
+      },
+    };
+    const res = createResponse();
+    const next = vi.fn();
+
+    User.findById.mockResolvedValue({
+      _doc: {
+        _id: "user-123",
+        email: "test@example.com",
+        username: "tester",
+        avatar: "avatar.png",
+        password: "hashed-password",
+      },
+    });
+
+    await getMe(req, res, next);
+
+    expect(User.findById).toHaveBeenCalledWith("user-123");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      user: {
+        _id: "user-123",
+        email: "test@example.com",
+        username: "tester",
+        avatar: "avatar.png",
+      },
+    });
+    expect(next).not.toHaveBeenCalled();
   });
 });

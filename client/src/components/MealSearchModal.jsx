@@ -13,6 +13,7 @@ const MEAL_TAG_OPTIONS = [
 export default function MealSearchModal({
   day,
   meals,
+  loading,
   onClose,
   onAddMeal,
   addingMealId,
@@ -126,7 +127,9 @@ export default function MealSearchModal({
           )}
         </div>
 
-        {Array.isArray(meals) && meals.length > 0 && visibleMeals.length > 0 ? (
+        {loading ? (
+          <p className="text-sm text-gray-500">Loading meals...</p>
+        ) : Array.isArray(meals) && meals.length > 0 && visibleMeals.length > 0 ? (
           <ul className="max-h-80 overflow-y-auto space-y-2 text-sm text-gray-700">
             {visibleMeals.map((meal) => (
               <li

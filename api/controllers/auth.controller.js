@@ -91,3 +91,17 @@ export const signout = async (req, res, next) => {
 		next(error);
 	}
 };
+
+export const getMe = async (req, res, next) => {
+	try {
+		const user = await User.findById(req.user.id);
+		if (!user) {
+			return next(errorHandler(404, "User not found"));
+		}
+
+		const { password, ...rest } = user._doc;
+		res.status(200).json({ user: rest });
+	} catch (error) {
+		next(error);
+	}
+};
