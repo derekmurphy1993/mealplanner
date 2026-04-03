@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { createDemoPlanner } from "../utils/demoMode";
 import { sanitizePlannerFormPayload } from "../utils/plannerForm";
 
 const DAY_5 = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_7 = [...DAY_5, "Saturday", "Sunday"];
 
 export default function CreatePlanner() {
+  const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [plannerLength, setPlannerLength] = useState(5);
@@ -42,6 +46,12 @@ export default function CreatePlanner() {
         return;
       }
 
+      if (isDemoUser) {
+        createDemoPlanner(payload);
+        navigate("/my-planner");
+        return;
+      }
+
       const res = await apiFetch("/api/planner/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,6 +78,12 @@ export default function CreatePlanner() {
   return (
     <main className="p-4 md:p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Create Planner</h1>
+      {isDemoUser && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Demo mode keeps planner changes only for this browser session. Nothing
+          is persisted to the backend.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>

@@ -89,4 +89,5 @@ describe("SignIn smoke test", () => {
     expect(await screen.findByText("Wrong Credentials")).toBeInTheDocument();
     expect(navigateMock).not.toHaveBeenCalled();
   });
+
 });

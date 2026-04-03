@@ -3,15 +3,24 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import MealCard from "../components/MealCard";
 import { apiFetch } from "../utils/api";
+import { getDemoMeals } from "../utils/demoMode";
 
 export default function RecipeBook() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const [showMealError, setShowMealError] = useState("");
   const [userMeals, setUserMeals] = useState([]);
   const [loadingMeals, setLoadingMeals] = useState(true);
 
   useEffect(() => {
     const handleGetMeals = async () => {
+      if (isDemoUser) {
+        setUserMeals(getDemoMeals());
+        setShowMealError("");
+        setLoadingMeals(false);
+        return;
+      }
+
       try {
         setLoadingMeals(true);
         setShowMealError("");
@@ -32,16 +41,22 @@ export default function RecipeBook() {
     };
 
     handleGetMeals();
-  }, [currentUser._id]);
+  }, [currentUser._id, isDemoUser]);
 
   return (
     <div className="flex flex-col">
       <h1 className="text-center mt-7 text-2xl">Your Meals</h1>
-      <Link to={`/create-meal`}>
-        <p className="text-center text-blue-600 hover:underline">
-          Create New Meal
+      {isDemoUser ? (
+        <p className="text-center mt-2 text-slate-600">
+          Demo mode stores changes only for this browser session.
         </p>
-      </Link>
+      ) : (
+        <Link to={`/create-meal`}>
+          <p className="text-center text-blue-600 hover:underline">
+            Create New Meal
+          </p>
+        </Link>
+      )}
 
       {loadingMeals && (
         <p className="mt-4 text-center text-slate-600">Loading meals...</p>

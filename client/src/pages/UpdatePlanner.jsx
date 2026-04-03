@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { getDemoPlannerById, updateDemoPlanner } from "../utils/demoMode";
 import { sanitizePlannerFormPayload } from "../utils/plannerForm";
 
 const DAY_5 = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const DAY_7 = [...DAY_5, "Saturday", "Sunday"];
 
 export default function UpdatePlanner() {
+  const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const navigate = useNavigate();
   const { plannerId } = useParams();
 
@@ -33,6 +37,30 @@ export default function UpdatePlanner() {
       try {
         setLoading(true);
         setError("");
+        if (isDemoUser) {
+          const demoPlanner = getDemoPlannerById(plannerId);
+          if (!demoPlanner) {
+            setError("Problem loading planner.");
+            return;
+          }
+
+          setName(demoPlanner.name || "");
+          setPlannerLength(demoPlanner.plannerLength === 7 ? 7 : 5);
+          setExistingWeek(Array.isArray(demoPlanner.week) ? demoPlanner.week : []);
+
+          const firstGoals = Array.isArray(demoPlanner.week)
+            ? demoPlanner.week.find((d) => d?.dailyGoals)?.dailyGoals
+            : null;
+          setDailyGoals({
+            calories:
+              firstGoals?.calories === undefined ? "" : String(firstGoals.calories),
+            carbs: firstGoals?.carbs === undefined ? "" : String(firstGoals.carbs),
+            prots: firstGoals?.prots === undefined ? "" : String(firstGoals.prots),
+            fats: firstGoals?.fats === undefined ? "" : String(firstGoals.fats),
+          });
+          return;
+        }
+
         const res = await apiFetch(`/api/planner/${plannerId}`);
         const data = await res.json();
         if (!res.ok || data.success === false) {
@@ -62,7 +90,7 @@ export default function UpdatePlanner() {
     };
 
     fetchPlanner();
-  }, [plannerId]);
+  }, [plannerId, isDemoUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,6 +108,17 @@ export default function UpdatePlanner() {
       if (validationError) {
         setError(validationError);
         setSaving(false);
+        return;
+      }
+
+      if (isDemoUser) {
+        const updatedPlanner = updateDemoPlanner(plannerId, payload);
+        setSaving(false);
+        if (!updatedPlanner) {
+          setError("Problem updating planner.");
+          return;
+        }
+        navigate("/my-planner");
         return;
       }
 
@@ -113,6 +152,12 @@ export default function UpdatePlanner() {
   return (
     <main className="p-4 md:p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Update Planner</h1>
+      {isDemoUser && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Demo mode keeps planner edits only for this browser session. They are
+          not persisted to the backend.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>

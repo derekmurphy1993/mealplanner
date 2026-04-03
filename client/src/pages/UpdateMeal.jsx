@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { getDemoMealById, updateDemoMeal } from "../utils/demoMode";
 import {
   isValidNumericInput,
   sanitizeMealFormPayload,
@@ -51,6 +52,7 @@ const normalizeMealForForm = (meal) => ({
 
 export default function UpdateMeal() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const navigate = useNavigate();
   const [showAddRecipe, setShowAddRecipe] = useState(true);
   const [showMealTypeOptions, setShowMealTypeOptions] = useState(false);
@@ -81,6 +83,15 @@ export default function UpdateMeal() {
         setLoading(true);
         setError("");
         const mealId = params.mealId;
+        if (isDemoUser) {
+          const demoMeal = getDemoMealById(mealId);
+          if (!demoMeal) {
+            setError("Problem loading meal.");
+            return;
+          }
+          setFormData(normalizeMealForForm(demoMeal));
+          return;
+        }
         const res = await apiFetch(`/api/meal/get/${mealId}`);
         const data = await res.json();
         if (!res.ok || data.success === false) {
@@ -96,7 +107,7 @@ export default function UpdateMeal() {
     };
 
     fetchMeal();
-  }, [params.mealId]);
+  }, [params.mealId, isDemoUser]);
 
   const checkHandler = () => {
     setShowAddRecipe(!showAddRecipe);
@@ -227,6 +238,18 @@ export default function UpdateMeal() {
         setSaving(false);
         return;
       }
+
+      if (isDemoUser) {
+        const updatedDemoMeal = updateDemoMeal(params.mealId, sanitizedFormData);
+        setSaving(false);
+        if (!updatedDemoMeal) {
+          setError("Problem updating meal.");
+          return;
+        }
+        navigate(`/meal/${updatedDemoMeal._id}`);
+        return;
+      }
+
       const res = await apiFetch(`/api/meal/update/${params.mealId}`, {
         method: "POST",
         headers: {
@@ -267,6 +290,12 @@ export default function UpdateMeal() {
   return (
     <main className="p-3 max-w-4xl mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Update Meal</h1>
+      {isDemoUser && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Demo mode saves meal changes only for this browser session. They are
+          not persisted to the backend.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-row sm:flex-col">
         <div className="flex flex-col gap-4">
           <input

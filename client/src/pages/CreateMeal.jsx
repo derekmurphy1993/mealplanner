@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { createDemoMeal } from "../utils/demoMode";
 import {
   isValidNumericInput,
   sanitizeMealFormPayload,
@@ -18,6 +19,7 @@ const MEAL_TAG_OPTIONS = [
 
 export default function CreateMeal() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const navigate = useNavigate();
   const [showAddRecipe, setShowAddRecipe] = useState(false);
   const [showMealTypeOptions, setShowMealTypeOptions] = useState(false);
@@ -161,7 +163,7 @@ export default function CreateMeal() {
     e.preventDefault();
     try {
       setLoading(true);
-      setError(false);
+      setError("");
       const { payload: sanitizedFormData, error: validationError } =
         sanitizeMealFormPayload(formData);
       if (validationError) {
@@ -169,6 +171,14 @@ export default function CreateMeal() {
         setLoading(false);
         return;
       }
+
+      if (isDemoUser) {
+        const demoMeal = createDemoMeal(sanitizedFormData);
+        setLoading(false);
+        navigate(`/meal/${demoMeal._id}`);
+        return;
+      }
+
       const res = await apiFetch("/api/meal/create", {
         method: "POST",
         headers: {
@@ -197,6 +207,12 @@ export default function CreateMeal() {
       <h1 className="text-3xl font-semibold text-center my-7">
         Create New Meal
       </h1>
+      {isDemoUser && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Demo mode saves changes only in this browser session. Your demo meals
+          will not be sent to the backend.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-row sm:flex-col">
         <div className="flex flex-col gap-4">
           <input

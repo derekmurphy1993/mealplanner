@@ -24,6 +24,7 @@ import AvatarImage from "../components/AvatarImage";
 
 export default function Profile() {
   const { currentUser, loading, error } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
@@ -37,6 +38,7 @@ export default function Profile() {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isDemoUser) return;
     try {
       dispatch(updateUserStart());
       const res = await apiFetch(`/api/user/update/${currentUser._id}`, {
@@ -59,6 +61,7 @@ export default function Profile() {
   };
 
   const handleDeleteUser = async () => {
+    if (isDemoUser) return;
     try {
       dispatch(deleteUserStart());
       const res = await apiFetch(`/api/user/delete/${currentUser._id}`, {
@@ -146,6 +149,12 @@ export default function Profile() {
   return (
     <div className="p-3 max-w-large mx-auto">
       <h1 className="font-semibold text-3xl text-center my-7">Profile</h1>
+      {isDemoUser && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-900">
+          Demo mode is read-only. You can review the sample account here, but
+          profile changes are disabled.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="file"
@@ -153,6 +162,7 @@ export default function Profile() {
           hidden
           accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
+          disabled={isDemoUser}
         />
         <AvatarImage
           onClick={() => fileRef.current.click()}
@@ -185,6 +195,7 @@ export default function Profile() {
           defaultValue={currentUser.username}
           className="border p-3 rounded-lg"
           onChange={handleChange}
+          disabled={isDemoUser}
         />
         <input
           type="text"
@@ -193,6 +204,7 @@ export default function Profile() {
           defaultValue={currentUser.email}
           className="border p-3 rounded-lg"
           onChange={handleChange}
+          disabled={isDemoUser}
         />
         <input
           type="password"
@@ -200,23 +212,28 @@ export default function Profile() {
           placeholder="password"
           className="border p-3 rounded-lg"
           onChange={handleChange}
+          disabled={isDemoUser}
         />
         <button
-          disabled={loading}
+          disabled={loading || isDemoUser}
           className="bg-slate-700 text-white rounded-lg 
           p-3 uppercase hover:opacity-90 disabled:opacity-80"
         >
-          {loading ? "loading..." : "Update"}
+          {isDemoUser ? "Demo Mode" : loading ? "loading..." : "Update"}
         </button>
       </form>
       <div className="flex justify-between mt-5">
-        <span
-          onClick={handleDeleteUser}
-          className="text-red-700 cursor-pointer"
-        >
-          {" "}
-          Delete Account{" "}
-        </span>
+        {!isDemoUser ? (
+          <span
+            onClick={handleDeleteUser}
+            className="text-red-700 cursor-pointer"
+          >
+            {" "}
+            Delete Account{" "}
+          </span>
+        ) : (
+          <span className="text-slate-500">Delete Account</span>
+        )}
         <span onClick={handleSignOut} className="text-red-700 cursor-pointer">
           {" "}
           Sign Out{" "}
