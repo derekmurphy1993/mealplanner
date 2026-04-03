@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import { getDemoMealById, updateDemoMeal } from "../utils/demoMode";
+import {
+  isValidNumericInput,
+  sanitizeMealFormPayload,
+} from "../utils/mealForm";
 
 const MACRO_FIELDS = new Set(["calories", "carbs", "fats", "prots"]);
 const MEAL_TAG_OPTIONS = [
@@ -11,50 +16,6 @@ const MEAL_TAG_OPTIONS = [
   "snack",
   "vegetarian",
 ];
-
-const isValidNumericInput = (value) => /^-?\d*\.?\d*$/.test(value);
-
-const sanitizeFormPayload = (formData) => {
-  const payload = { ...formData };
-  payload.serving = (payload.serving || "").trim();
-  payload.mealTags = Array.isArray(payload.mealTags)
-    ? payload.mealTags.filter((tag) => MEAL_TAG_OPTIONS.includes(tag))
-    : [];
-
-  for (const field of MACRO_FIELDS) {
-    const raw = payload[field];
-    if (raw === "" || raw === null || raw === undefined) {
-      payload[field] = null;
-      continue;
-    }
-
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return null;
-    payload[field] = parsed;
-  }
-
-  if (Array.isArray(payload?.recipe?.ingredients)) {
-    payload.recipe = {
-      ...payload.recipe,
-      ingredients: payload.recipe.ingredients.map((ingredient) => {
-        const rawAmount = ingredient?.itemAmount;
-        if (rawAmount === "" || rawAmount === null || rawAmount === undefined) {
-          return { ...ingredient, itemAmount: null };
-        }
-
-        const parsedAmount = Number(rawAmount);
-        if (!Number.isFinite(parsedAmount)) return null;
-        return { ...ingredient, itemAmount: parsedAmount };
-      }),
-    };
-
-    if (payload.recipe.ingredients.some((ingredient) => ingredient === null)) {
-      return null;
-    }
-  }
-
-  return payload;
-};
 
 const normalizeMealForForm = (meal) => ({
   ...meal,
@@ -91,11 +52,13 @@ const normalizeMealForForm = (meal) => ({
 
 export default function UpdateMeal() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const navigate = useNavigate();
   const [showAddRecipe, setShowAddRecipe] = useState(true);
   const [showMealTypeOptions, setShowMealTypeOptions] = useState(false);
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const params = useParams();
 
   const [formData, setFormData] = useState({
@@ -116,20 +79,35 @@ export default function UpdateMeal() {
 
   useEffect(() => {
     const fetchMeal = async () => {
-      const mealId = params.mealId;
-      const res = await apiFetch(`/api/meal/get/${mealId}`);
-      const data = await res.json();
-      if (data.success === false) {
-        console.log(data.message);
-        return;
+      try {
+        setLoading(true);
+        setError("");
+        const mealId = params.mealId;
+        if (isDemoUser) {
+          const demoMeal = getDemoMealById(mealId);
+          if (!demoMeal) {
+            setError("Problem loading meal.");
+            return;
+          }
+          setFormData(normalizeMealForForm(demoMeal));
+          return;
+        }
+        const res = await apiFetch(`/api/meal/get/${mealId}`);
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          setError(data.message || "Problem loading meal.");
+          return;
+        }
+        setFormData(normalizeMealForForm(data));
+      } catch (err) {
+        setError(err.message || "Problem loading meal.");
+      } finally {
+        setLoading(false);
       }
-      setFormData(normalizeMealForForm(data));
     };
 
     fetchMeal();
-  }, []);
-
-  console.log(currentUser);
+  }, [params.mealId, isDemoUser]);
 
   const checkHandler = () => {
     setShowAddRecipe(!showAddRecipe);
@@ -251,14 +229,27 @@ export default function UpdateMeal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
-      setError(false);
-      const sanitizedFormData = sanitizeFormPayload(formData);
-      if (!sanitizedFormData) {
-        setError("Macros and ingredient amounts must be valid numbers.");
-        setLoading(false);
+      setSaving(true);
+      setError("");
+      const { payload: sanitizedFormData, error: validationError } =
+        sanitizeMealFormPayload(formData);
+      if (validationError) {
+        setError(validationError);
+        setSaving(false);
         return;
       }
+
+      if (isDemoUser) {
+        const updatedDemoMeal = updateDemoMeal(params.mealId, sanitizedFormData);
+        setSaving(false);
+        if (!updatedDemoMeal) {
+          setError("Problem updating meal.");
+          return;
+        }
+        navigate(`/meal/${updatedDemoMeal._id}`);
+        return;
+      }
+
       const res = await apiFetch(`/api/meal/update/${params.mealId}`, {
         method: "POST",
         headers: {
@@ -270,20 +261,41 @@ export default function UpdateMeal() {
         }),
       });
       const data = await res.json();
-      setLoading(false);
-      if (data.success === false) {
-        setError(data.message);
+      setSaving(false);
+      if (!res.ok || data.success === false) {
+        setError(data.message || "Problem updating meal.");
+        return;
       }
       navigate(`/meal/${data._id}`);
     } catch (error) {
-      setError(error.message);
-      setLoading(false);
+      setError(error.message || "Problem updating meal.");
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return <div className="p-8">Loading meal...</div>;
+  }
+
+  if (error && !formData.name) {
+    return (
+      <main className="p-4 md:p-6 max-w-2xl mx-auto">
+        <p role="alert" className="text-red-600 mb-4">
+          {error}
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="p-3 max-w-4xl mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Update Meal</h1>
+      {isDemoUser && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Demo mode saves meal changes only for this browser session. They are
+          not persisted to the backend.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-row sm:flex-col">
         <div className="flex flex-col gap-4">
           <input
@@ -529,13 +541,17 @@ export default function UpdateMeal() {
           </div>
         )}
         <button
-          disabled={loading}
+          disabled={saving}
           type="submit"
           className="rounded-lg text-slate-100 bg-green-600 hover:bg-green-400 p-3 disabled:opacity-50"
         >
-          {loading ? "Updating Meal..." : "Update Meal"}
+          {saving ? "Updating Meal..." : "Update Meal"}
         </button>
-        {error && <p className="text-red-700 text-sm">{error}</p>}
+        {error && (
+          <p role="alert" className="text-red-700 text-sm">
+            {error}
+          </p>
+        )}
       </form>
     </main>
   );

@@ -4,6 +4,11 @@ import { useSelector } from "react-redux";
 import { BiDuplicate } from "react-icons/bi";
 import MealSearchModal from "../components/MealSearchModal";
 import { apiFetch } from "../utils/api";
+import {
+  getDemoMeals,
+  getDemoPlanners,
+  updateDemoPlanner,
+} from "../utils/demoMode";
 
 const escapeHtml = (value) =>
   String(value ?? "")
@@ -15,17 +20,29 @@ const escapeHtml = (value) =>
 
 export default function Planner() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const [planners, setPlanners] = useState([]);
   const [userMeals, setUserMeals] = useState([]);
   const [selectedPlannerId, setSelectedPlannerId] = useState("");
   const [modalDay, setModalDay] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMeals, setLoadingMeals] = useState(true);
   const [error, setError] = useState("");
   const [addingMealId, setAddingMealId] = useState("");
   const [dayMealActionKey, setDayMealActionKey] = useState("");
 
   useEffect(() => {
     const fetchPlanners = async () => {
+      if (isDemoUser) {
+        setLoading(true);
+        setError("");
+        const demoPlanners = getDemoPlanners();
+        setPlanners(demoPlanners);
+        setSelectedPlannerId(demoPlanners[0]?._id || "");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
@@ -51,12 +68,23 @@ export default function Planner() {
     };
 
     fetchPlanners();
-  }, []);
+  }, [isDemoUser]);
 
   useEffect(() => {
     const fetchUserMeals = async () => {
-      if (!currentUser?._id) return;
+      if (isDemoUser) {
+        setUserMeals(getDemoMeals());
+        setLoadingMeals(false);
+        return;
+      }
+
+      if (!currentUser?._id) {
+        setUserMeals([]);
+        setLoadingMeals(false);
+        return;
+      }
       try {
+        setLoadingMeals(true);
         const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
         const data = await res.json();
         if (!res.ok || data.success === false) {
@@ -66,11 +94,13 @@ export default function Planner() {
         setUserMeals(Array.isArray(data) ? data : []);
       } catch {
         setUserMeals([]);
+      } finally {
+        setLoadingMeals(false);
       }
     };
 
     fetchUserMeals();
-  }, [currentUser?._id]);
+  }, [currentUser?._id, isDemoUser]);
 
   const selectedPlanner = useMemo(
     () => planners.find((planner) => planner._id === selectedPlannerId) || null,
@@ -210,6 +240,24 @@ export default function Planner() {
   };
 
   const persistPlannerWeek = async (week, fallbackErrorMessage) => {
+    if (isDemoUser) {
+      const updatedPlanner = updateDemoPlanner(selectedPlanner._id, {
+        plannerLength: selectedPlanner.plannerLength,
+        name: selectedPlanner.name || "",
+        week,
+      });
+      if (!updatedPlanner) {
+        setError(fallbackErrorMessage);
+        return false;
+      }
+      setPlanners((prev) =>
+        prev.map((planner) =>
+          planner._id === selectedPlanner._id ? updatedPlanner : planner
+        )
+      );
+      return true;
+    }
+
     if (!selectedPlanner?._id) return false;
 
     const payload = {
@@ -365,18 +413,26 @@ export default function Planner() {
       <div className="p-8 max-w-2xl mx-auto">
         {error && <p className="text-red-600 mb-4">{error}</p>}
         <p className="text-lg mb-4">No planners found.</p>
-        <Link
-          to="/create-planner"
-          className="inline-block px-4 py-2 bg-azul-600 text-white rounded-lg hover:bg-azul-700"
-        >
-          Create planner
-        </Link>
+        {!isDemoUser && (
+          <Link
+            to="/create-planner"
+            className="inline-block px-4 py-2 bg-azul-600 text-white rounded-lg hover:bg-azul-700"
+          >
+            Create planner
+          </Link>
+        )}
       </div>
     );
   }
 
   return (
     <div className="p-4 md:p-6 min-h-screen bg-gray-50">
+      {isDemoUser && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Demo mode stores planner changes only for this browser session. They
+          are not persisted to the backend.
+        </div>
+      )}
       <div className="flex flex-wrap gap-2 items-center mb-6">
         {planners.map((planner) => (
           <button
@@ -584,6 +640,7 @@ export default function Planner() {
       <MealSearchModal
         day={modalDay}
         meals={userMeals}
+        loading={loadingMeals}
         onAddMeal={handleAddMealToDay}
         addingMealId={addingMealId}
         onClose={() => setModalDay("")}

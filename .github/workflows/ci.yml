@@ -26,6 +26,12 @@ jobs:
       - name: Install deps
         run: npm ci
 
+      - name: Run client lint
+        run: npm run lint
+
+      - name: Run client tests
+        run: npm run test
+
       - name: Build client
         run: npm run build
 
@@ -51,3 +57,6 @@ jobs:
           node --check api/controllers/auth.controller.js
           node --check api/controllers/meal.controller.js
           node --check api/controllers/planner.controller.js
+
+      - name: Run API tests
+        run: npm run test:api

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
 	signInStart,
@@ -8,12 +8,15 @@ import {
 } from "../redux/user/userSlice";
 import OAuth from "../components/OAuth";
 import { apiFetch } from "../utils/api";
+import { DEMO_USER, getDemoTargetPath } from "../utils/demoMode";
 
 export default function SignIn() {
 	const [formData, setFormData] = useState({});
 	const { loading, error } = useSelector((state) => state.user);
 	const navigate = useNavigate();
+	const location = useLocation();
 	const dispatch = useDispatch();
+	const protectedTarget = location.state?.from || "";
 
 	const onChangeHandler = (e) => {
 		setFormData({
@@ -39,10 +42,15 @@ export default function SignIn() {
 				return;
 			}
 			dispatch(signInSuccess(data));
-			navigate("/");
+			navigate(protectedTarget || "/");
 		} catch (error) {
 			dispatch(signInFailure(error.message));
 		}
+	};
+
+	const handleDemoMode = () => {
+		dispatch(signInSuccess(DEMO_USER));
+		navigate(getDemoTargetPath(protectedTarget), { replace: true });
 	};
 
 	return (
@@ -77,6 +85,22 @@ export default function SignIn() {
 					<span className="text-blue-500">Sign Up</span>
 				</Link>
 			</div>
+			{protectedTarget && (
+				<div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+					<p className="font-medium text-slate-800">Trying a protected page?</p>
+					<p className="mt-1 text-sm text-slate-600">
+						You can continue in read-only demo mode to preview the planner,
+						recipe book, and profile experience.
+					</p>
+					<button
+						type="button"
+						onClick={handleDemoMode}
+						className="mt-3 w-full rounded-lg bg-leaf-400 p-3 font-semibold uppercase text-azul-900 hover:bg-leaf-500"
+					>
+						Continue In Demo Mode
+					</button>
+				</div>
+			)}
 			{error && <p className="text-red-500 mt-5">{error}</p>}
 		</div>
 	);

@@ -4,9 +4,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { TiDelete, TiWarningOutline } from "react-icons/ti";
 import placeholderimg from "../../assets/placeholder.png";
 import { apiFetch } from "../utils/api";
+import { deleteDemoMeal, getDemoMealById } from "../utils/demoMode";
 
 export default function Meal() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const [meal, getMeal] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -16,6 +18,11 @@ export default function Meal() {
 
   useEffect(() => {
     const fetchMeal = async () => {
+      if (isDemoUser) {
+        getMeal(getDemoMealById(params.mealId));
+        return;
+      }
+
       const mealId = params.mealId;
       const endpoint = currentUser
         ? `/api/meal/get/${mealId}?includePublic=true`
@@ -30,10 +37,16 @@ export default function Meal() {
     };
 
     fetchMeal();
-  }, [params.mealId, currentUser]);
+  }, [params.mealId, currentUser, isDemoUser]);
 
   const handleConfirmedMealDelete = async () => {
     if (!meal?._id) return;
+    if (isDemoUser) {
+      deleteDemoMeal(meal._id);
+      setShowDeleteModal(false);
+      navigate("/recipe-book");
+      return;
+    }
     try {
       setDeleting(true);
       setDeleteError("");

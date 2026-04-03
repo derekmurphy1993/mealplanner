@@ -3,51 +3,74 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import MealCard from "../components/MealCard";
 import { apiFetch } from "../utils/api";
+import { getDemoMeals } from "../utils/demoMode";
 
 export default function RecipeBook() {
   const { currentUser } = useSelector((state) => state.user);
+  const isDemoUser = Boolean(currentUser?.isDemoUser);
   const [showMealError, setShowMealError] = useState("");
   const [userMeals, setUserMeals] = useState([]);
-
-  const handleGetMeals = async () => {
-    try {
-      setShowMealError(false);
-      const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
-      const data = await res.json();
-      if (data.success === false) {
-        setShowMealError(true);
-        return;
-      }
-      setUserMeals(data);
-    } catch (error) {
-      setShowMealError(error.message);
-    }
-  };
+  const [loadingMeals, setLoadingMeals] = useState(true);
 
   useEffect(() => {
+    const handleGetMeals = async () => {
+      if (isDemoUser) {
+        setUserMeals(getDemoMeals());
+        setShowMealError("");
+        setLoadingMeals(false);
+        return;
+      }
+
+      try {
+        setLoadingMeals(true);
+        setShowMealError("");
+        const res = await apiFetch(`/api/user/meals/${currentUser._id}`);
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          setUserMeals([]);
+          setShowMealError(data.message || "Problem loading meals.");
+          return;
+        }
+        setUserMeals(Array.isArray(data) ? data : []);
+      } catch (error) {
+        setUserMeals([]);
+        setShowMealError(error.message);
+      } finally {
+        setLoadingMeals(false);
+      }
+    };
+
     handleGetMeals();
-  }, []);
+  }, [currentUser._id, isDemoUser]);
 
   return (
     <div className="flex flex-col">
       <h1 className="text-center mt-7 text-2xl">Your Meals</h1>
-      <Link to={`/create-meal`}>
-        <p className="text-center text-blue-600 hover:underline">
-          Create New Meal
+      {isDemoUser ? (
+        <p className="text-center mt-2 text-slate-600">
+          Demo mode stores changes only for this browser session.
         </p>
-      </Link>
+      ) : (
+        <Link to={`/create-meal`}>
+          <p className="text-center text-blue-600 hover:underline">
+            Create New Meal
+          </p>
+        </Link>
+      )}
 
-      {userMeals.length < 1 && (
+      {loadingMeals && (
+        <p className="mt-4 text-center text-slate-600">Loading meals...</p>
+      )}
+      {!loadingMeals && !showMealError && userMeals.length < 1 && (
         <p className="text-red-600 mt-4 text-center font-semibold">
-          {" "}
           No meals found, add some in your recipe book
         </p>
       )}
       {showMealError && (
-        <p className="text-red-600 mt-4 text-center"> {showMealError} </p>
+        <p className="text-red-600 mt-4 text-center">{showMealError}</p>
       )}
 
-      {userMeals && userMeals.length > 0 && (
+      {!loadingMeals && userMeals.length > 0 && (
         <div className="flex flex-row flex-wrap gap-3 justify-around">
           {userMeals.map((meal, index) => (
             <MealCard key={meal._id} meal={meal} index={index} />
